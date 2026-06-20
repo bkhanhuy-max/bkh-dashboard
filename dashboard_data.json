@@ -1,0 +1,96 @@
+﻿{
+    "last_updated":  "2026-06-20 15:59:51",
+    "unice":  {
+                  "boq_total":  229359753215,
+                  "spent_total":  51917217437.7569,
+                  "concrete_design":  13287.6600171475,
+                  "concrete_actual":  12449,
+                  "concrete_diff":  -838.660017147535,
+                  "concrete_pct":  "-6,31%",
+                  "contracts_signed":  42,
+                  "contracts_total":  59,
+                  "vo_count":  33,
+                  "top_suppliers":  [
+                                        {
+                                            "Name":  "HƯNG THỊNH",
+                                            "Value":  16647183962.808
+                                        },
+                                        {
+                                            "Name":  "VIỆT MINH THỊNH",
+                                            "Value":  7860696680
+                                        },
+                                        {
+                                            "Name":  "Phương Nam",
+                                            "Value":  6952999260
+                                        },
+                                        {
+                                            "Name":  "SAKI",
+                                            "Value":  5254101052
+                                        },
+                                        {
+                                            "Name":  "QUANG PHÚC",
+                                            "Value":  3831471000
+                                        }
+                                    ],
+                  "top_concrete_events":  [
+                                              {
+                                                  "Date":  "09/05/2026",
+                                                  "Component":  "Dầm sàn T2 X2",
+                                                  "Volume":  428.5,
+                                                  "Mac":  " M300 "
+                                              },
+                                              {
+                                                  "Date":  "12/05/2026",
+                                                  "Component":  "Nền X3",
+                                                  "Volume":  379,
+                                                  "Mac":  " M300 "
+                                              },
+                                              {
+                                                  "Date":  "29/03/2026",
+                                                  "Component":  "Dầm sàn T2 X3",
+                                                  "Volume":  330,
+                                                  "Mac":  " M300 "
+                                              },
+                                              {
+                                                  "Date":  "21/04/2026",
+                                                  "Component":  "Dầm sàn tầng 3 X3",
+                                                  "Volume":  329.5,
+                                                  "Mac":  " M300 "
+                                              },
+                                              {
+                                                  "Date":  "21/04/2026",
+                                                  "Component":  "Dầm sàn tầng 3 X3",
+                                                  "Volume":  310,
+                                                  "Mac":  " M300 "
+                                              }
+                                          ]
+              },
+    "howell":  {
+                   "boq_total":  61048011043,
+                   "budget_total":  55274383234,
+                   "spent_total":  323317996,
+                   "remaining_budget":  54951065238,
+                   "disciplines":  [
+                                       {
+                                           "Name":  "Kết cấu thép",
+                                           "Value":  35466546654
+                                       },
+                                       {
+                                           "Name":  "Cơ điện (MEP)",
+                                           "Value":  12058958958
+                                       },
+                                       {
+                                           "Name":  "Xây dựng",
+                                           "Value":  11268260332
+                                       },
+                                       {
+                                           "Name":  "Phòng cháy chữa cháy (PCCC)",
+                                           "Value":  1234567890
+                                       },
+                                       {
+                                           "Name":  "Hạ tầng kỹ thuật",
+                                           "Value":  1019677209
+                                       }
+                                   ]
+               }
+}

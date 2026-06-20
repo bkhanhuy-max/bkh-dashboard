@@ -1,0 +1,13 @@
+# Bỏ qua file Excel gốc (dữ liệu nhạy cảm, không đưa lên GitHub)
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+
+# Bỏ qua file tạm của Windows
+Thumbs.db
+desktop.ini
+~$*
+
+# Bỏ qua log
+*.log

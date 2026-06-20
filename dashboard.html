@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BKH-AI Multi-Project Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(17, 24, 39, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --color-primary: #3b82f6;
+            --color-primary-glow: rgba(59, 130, 246, 0.15);
+            --color-success: #10b981;
+            --color-success-glow: rgba(16, 185, 129, 0.15);
+            --color-warning: #f59e0b;
+            --color-warning-glow: rgba(245, 158, 11, 0.15);
+            --color-danger: #ef4444;
+            --color-danger-glow: rgba(239, 68, 68, 0.15);
+            --card-radius: 16px;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Styles --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .project-selector {
+            background: rgba(31, 41, 55, 0.5);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all var(--transition-speed);
+        }
+
+        .project-selector:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 12px var(--color-primary-glow);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+
+        /* --- Dashboard Grid --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Cards Panels --- */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* --- KPI Cards Grid --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--color-primary);
+        }
+
+        .kpi-card.success::before { background: var(--color-success); }
+        .kpi-card.warning::before { background: var(--color-warning); }
+        .kpi-card.danger::before { background: var(--color-danger); }
+
+        .kpi-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-subtext {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .kpi-subtext .trend {
+            font-weight: 600;
+        }
+        .trend.up { color: var(--color-success); }
+        .trend.down { color: var(--color-danger); }
+        .trend.neutral { color: var(--color-warning); }
+
+        /* --- Action Items --- */
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .action-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all var(--transition-speed);
+        }
+
+        .action-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .action-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .badge-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .badge-status.red {
+            background: var(--color-danger);
+            box-shadow: 0 0 8px var(--color-danger);
+        }
+
+        .badge-status.yellow {
+            background: var(--color-warning);
+            box-shadow: 0 0 8px var(--color-warning);
+        }
+
+        .action-title {
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .action-project-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--color-primary);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            margin-right: 0.5rem;
+        }
+
+        .action-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-action-outline:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* --- Details & Metrics Panel --- */
+        .metrics-section {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .metric-row {
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-name {
+            font-weight: 500;
+        }
+
+        .metric-values {
+            color: var(--text-secondary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--color-primary) 0%, #60a5fa 100%);
+            transition: width 0.5s ease-out;
+        }
+
+        .progress-bar.success {
+            background: linear-gradient(90deg, var(--color-success) 0%, #34d399 100%);
+        }
+
+        .progress-bar.warning {
+            background: linear-gradient(90deg, var(--color-warning) 0%, #fbbf24 100%);
+        }
+
+        .progress-bar.danger {
+            background: linear-gradient(90deg, var(--color-danger) 0%, #f87171 100%);
+        }
+
+        /* Details Table styling for deep-dives */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .details-table th, .details-table td {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .details-table th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .details-table tbody tr {
+            transition: background var(--transition-speed);
+        }
+
+        .details-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .section-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-header::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: var(--color-primary);
+            border-radius: 2px;
+        }
+
+        /* Modal / Instruction overlay */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .modal-body {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .btn-modal-close {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- --- Header --- -->
+        <header>
+            <div class="header-title">
+                <h1>BKH-AI Dashboard</h1>
+                <p>Quản trị đồng thời nhiều dự án xây dựng & thi công | Cập nhật lúc: <span id="lbl-last-updated">-</span></p>
+            </div>
+            <div class="header-controls">
+                <select class="project-selector" id="sel-project" onchange="renderDashboard()">
+                    <option value="all">Tất cả dự án</option>
+                    <option value="unice">Dự án UNICE Quảng Ngãi</option>
+                    <option value="howell">Dự án HOWELL Technology</option>
+                </select>
+                <button class="btn-refresh" onclick="showRefreshInstruction()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 1 1 21.306 7H18M4 9h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Cập nhật số liệu
+                </button>
+            </div>
+        </header>
+
+        <!-- --- Dashboard Grid --- -->
+        <div class="dashboard-grid">
+            <!-- Left Side: KPI & Core Metrics -->
+            <div>
+                <!-- KPI Grid -->
+                <div class="kpi-grid" id="kpi-container">
+                    <!-- KPI Cards dynamically populated -->
+                </div>
+
+                <!-- Core Metrics Details -->
+                <div class="panel">
+                    <div class="panel-title">
+                        <span>Tiến độ và Hao hụt cốt lõi</span>
+                        <span id="txt-project-name" style="font-size: 0.9rem; font-weight: 500; color: var(--color-primary);">Tất cả dự án</span>
+                    </div>
+                    <div id="metrics-container">
+                        <!-- Metrics Rows dynamically populated -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Action Items / To-Do -->
+            <div>
+                <div class="panel" style="height: 100%;">
+                    <div class="panel-title">
+                        <span>Việc cần xử lý ngay</span>
+                        <span style="font-size: 0.75rem; background: var(--color-danger-glow); color: var(--color-danger); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;" id="action-count-badge">4 Cảnh báo</span>
+                    </div>
+                    <div class="action-list" id="action-container">
+                        <!-- Action Items dynamically populated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruction Modal -->
+    <div class="modal" id="modal-instruction" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">Cập nhật số liệu Excel</div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Để quét dữ liệu mới nhất từ các file Excel gốc, bạn hãy chạy lệnh sau trong cửa sổ PowerShell tại thư mục dự án:</p>
+            <div class="modal-body">powershell -ExecutionPolicy Bypass -File .\update_dashboard.ps1</div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Sau khi lệnh chạy xong, bạn chỉ cần tải lại (F5) trang web này.</p>
+            <button class="btn-modal-close" onclick="document.getElementById('modal-instruction').style.display = 'none'">Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        // Default data embedded as fallback in case fetch is blocked by local file system CORS policy
+        let dashboardData = {
+            "last_updated": "2026-06-20 15:59:51",
+            "unice": {
+                "boq_total": 229359753215,
+                "spent_total": 51917217437.7569,
+                "concrete_design": 13287.6600171475,
+                "concrete_actual": 12449,
+                "concrete_diff": -838.660017147535,
+                "concrete_pct": "-6,31%",
+                "contracts_signed": 42,
+                "contracts_total": 59,
+                "vo_count": 33,
+                "top_suppliers": [
+                    { "Name": "HƯNG THỊNH", "Value": 16647183962.808 },
+                    { "Name": "VIỆT MINH THỊNH", "Value": 7860696680 },
+                    { "Name": "Phương Nam", "Value": 6952999260 },
+                    { "Name": "SAKI", "Value": 5254101052 },
+                    { "Name": "QUANG PHÚC", "Value": 3831471000 }
+                ],
+                "top_concrete_events": [
+                    { "Date": "09/05/2026", "Component": "Dầm sàn T2 X2", "Volume": 428.5, "Mac": " M300 " },
+                    { "Date": "12/05/2026", "Component": "Nền X3", "Volume": 379, "Mac": " M300 " },
+                    { "Date": "29/03/2026", "Component": "Dầm sàn T2 X3", "Volume": 330, "Mac": " M300 " },
+                    { "Date": "21/04/2026", "Component": "Dầm sàn tầng 3 X3", "Volume": 329.5, "Mac": " M300 " },
+                    { "Date": "21/04/2026", "Component": "Dầm sàn tầng 3 X3", "Volume": 310, "Mac": " M300 " }
+                ]
+            },
+            "howell": {
+                "boq_total": 61048011043,
+                "budget_total": 55274383234,
+                "spent_total": 323317996,
+                "remaining_budget": 54951065238,
+                "disciplines": [
+                    { "Name": "Kết cấu thép", "Value": 35466546654 },
+                    { "Name": "Cơ điện (MEP)", "Value": 12058958958 },
+                    { "Name": "Xây dựng", "Value": 11268260332 },
+                    { "Name": "Phòng cháy chữa cháy (PCCC)", "Value": 1234567890 },
+                    { "Name": "Hạ tầng kỹ thuật", "Value": 1019677209 }
+                ]
+            }
+        };
+
+        // Attempt to fetch fresh data from dashboard_data.json
+        fetch('dashboard_data.json')
+            .then(response => response.json())
+            .then(data => {
+                dashboardData = data;
+                document.getElementById('lbl-last-updated').innerText = dashboardData.last_updated;
+                renderDashboard();
+            })
+            .catch(error => {
+                console.warn("Could not fetch dashboard_data.json (expected in local file opening due to browser CORS rules). Using embedded fallback data.");
+                document.getElementById('lbl-last-updated').innerText = dashboardData.last_updated;
+                renderDashboard();
+            });
+
+        function formatVND(value) {
+            if (value >= 1e9) {
+                return (value / 1e9).toFixed(2) + " tỷ VND";
+            }
+            if (value >= 1e6) {
+                return (value / 1e6).toFixed(1) + " triệu VND";
+            }
+            return value.toLocaleString('vi-VN') + " VND";
+        }
+
+        function showRefreshInstruction() {
+            document.getElementById('modal-instruction').style.display = 'flex';
+        }
+
+        function closeModal(event) {
+            document.getElementById('modal-instruction').style.display = 'none';
+        }
+
+        function renderDashboard() {
+            const project = document.getElementById('sel-project').value;
+            const kpiContainer = document.getElementById('kpi-container');
+            const metricsContainer = document.getElementById('metrics-container');
+            const actionContainer = document.getElementById('action-container');
+            const actionBadge = document.getElementById('action-count-badge');
+            const prjName = document.getElementById('txt-project-name');
+
+            kpiContainer.innerHTML = '';
+            metricsContainer.innerHTML = '';
+            actionContainer.innerHTML = '';
+
+            let actions = [];
+
+            if (project === 'all') {
+                prjName.innerText = "Tổng hợp (Tất cả dự án)";
+                
+                // Calculate aggregated figures
+                const totalBoq = dashboardData.unice.boq_total + dashboardData.howell.boq_total;
+                const totalSpent = dashboardData.unice.spent_total + dashboardData.howell.spent_total;
+                const totalBudget = dashboardData.unice.boq_total + dashboardData.howell.budget_total; // approximate
+                const remaining = totalBudget - totalSpent;
+
+                // Render KPI Cards
+                kpiContainer.innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Tổng doanh thu BOQ</div>
+                        <div class="kpi-value">${formatVND(totalBoq)}</div>
+                        <div class="kpi-subtext">2 dự án đang thực hiện</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label">Chi phí thực tế</div>
+                        <div class="kpi-value">${formatVND(totalSpent)}</div>
+                        <div class="kpi-subtext">Đạt <span class="trend up">${((totalSpent / totalBudget) * 100).toFixed(1)}%</span> ngân sách</div>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-label">Ngân sách còn lại</div>
+                        <div class="kpi-value">${formatVND(remaining)}</div>
+                        <div class="kpi-subtext">Lũy kế dự phòng an toàn</div>
+                    </div>
+                `;
+
+                // Render Core Metrics
+                const unicePct = ((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100).toFixed(1);
+                const howellPct = ((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100).toFixed(2);
+
+                metricsContainer.innerHTML = `
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Dự án UNICE Quảng Ngãi - Giải ngân ngân sách</span>
+                            <span class="metric-values">${formatVND(dashboardData.unice.spent_total)} / ${formatVND(dashboardData.unice.boq_total)}</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100)}%;"></div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Dự án HOWELL Technology - Giải ngân ngân sách</span>
+                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_total)}</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar success" style="width: ${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100)}%;"></div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Sản lượng bê tông (UNICE)</span>
+                            <span class="metric-values">${dashboardData.unice.concrete_actual.toLocaleString()} m³ / ${dashboardData.unice.concrete_design.toLocaleString()} m³ (${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar warning" style="width: ${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100)}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">So sánh Tổng quan Dự án</div>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Tên dự án</th>
+                                <th style="text-align: right;">Doanh thu BOQ</th>
+                                <th style="text-align: right;">Chi phí thực tế</th>
+                                <th style="text-align: right;">Giải ngân %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>UNICE Quảng Ngãi</strong></td>
+                                <td style="text-align: right;">${formatVND(dashboardData.unice.boq_total)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.unice.spent_total)}</td>
+                                <td style="text-align: right; font-weight: 600; color: var(--color-warning);">${unicePct}%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>HOWELL Technology</strong></td>
+                                <td style="text-align: right;">${formatVND(dashboardData.howell.boq_total)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.howell.spent_total)}</td>
+                                <td style="text-align: right; font-weight: 600; color: var(--color-success);">${howellPct}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+
+                // Set Action Items
+                actions = [
+                    { status: 'red', project: 'UNICE', title: 'Hao hụt bê tông công trường', desc: `Đợt đổ bê tông MLAND hụt ${dashboardData.unice.concrete_pct.replace('-', '')} (lệch ${Math.abs(dashboardData.unice.concrete_diff).toFixed(0)} m³).`, act1: 'Yêu cầu giải trình', act2: 'Xem chi tiết' },
+                    { status: 'red', project: 'UNICE', title: 'Hợp đồng thầu phụ/Tổ đội', desc: `Tiến độ ký hợp đồng chậm trễ. Hiện mới đạt ${dashboardData.unice.contracts_signed}/${dashboardData.unice.contracts_total} gói.`, act1: 'Nhắc nhở QS', act2: 'Xem chi tiết' },
+                    { status: 'yellow', project: 'UNICE', title: 'Hồ sơ thay đổi thiết kế (VO)', desc: `Đang có ${dashboardData.unice.vo_count} hạng mục phát sinh cần trình duyệt giá trị với CĐT.`, act1: 'Xem danh mục', act2: 'Trình CĐT' },
+                    { status: 'yellow', project: 'HOWELL', title: 'Kế hoạch triển khai ban đầu', desc: `Hồ sơ ngân sách HOWELL đã hoàn thành. Chi phí thực tế giai đoạn đầu là ${formatVND(dashboardData.howell.spent_total)}.`, act1: 'Xem chi tiết', act2: null }
+                ];
+
+            } else if (project === 'unice') {
+                prjName.innerText = "Dự án Nhà máy UNICE Quảng Ngãi";
+
+                kpiContainer.innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Dự toán BOQ gốc</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.boq_total)}</div>
+                        <div class="kpi-subtext">Hợp đồng trọn gói chính thức</div>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-label">Thực tế đã chi</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.spent_total)}</div>
+                        <div class="kpi-subtext">Đạt <span class="trend neutral">${((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100).toFixed(1)}%</span> ngân sách gốc</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label">Ngân sách còn lại</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.boq_total - dashboardData.unice.spent_total)}</div>
+                        <div class="kpi-subtext">🟢 Đang trong vùng kiểm soát</div>
+                    </div>
+                `;
+
+                let suppliersHtml = '';
+                if (dashboardData.unice.top_suppliers && dashboardData.unice.top_suppliers.length > 0) {
+                    suppliersHtml = `
+                        <div class="section-header">Top 5 Nhà cung cấp theo Chi phí</div>
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>Nhà cung cấp</th>
+                                    <th style="text-align: right;">Giá trị hợp đồng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dashboardData.unice.top_suppliers.map(s => `
+                                    <tr>
+                                        <td><strong>${s.Name}</strong></td>
+                                        <td style="text-align: right; font-weight: 500;">${formatVND(s.Value)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                let concreteHtml = '';
+                if (dashboardData.unice.top_concrete_events && dashboardData.unice.top_concrete_events.length > 0) {
+                    concreteHtml = `
+                        <div class="section-header">Top 5 Sự kiện đổ Bê tông lớn nhất</div>
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Hạng mục công trình</th>
+                                    <th style="text-align: right;">Khối lượng</th>
+                                    <th style="text-align: center;">Mác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dashboardData.unice.top_concrete_events.map(e => `
+                                    <tr>
+                                        <td>${e.Date}</td>
+                                        <td><strong>${e.Component}</strong></td>
+                                        <td style="text-align: right; font-weight: 500;">${e.Volume.toLocaleString('vi-VN')} m³</td>
+                                        <td style="text-align: center;"><span style="background: rgba(255,255,255,0.05); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">${e.Mac.trim()}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                metricsContainer.innerHTML = `
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Sản lượng bê tông (MLAND cung cấp)</span>
+                            <span class="metric-values">${dashboardData.unice.concrete_actual.toLocaleString()} m³ / ${dashboardData.unice.concrete_design.toLocaleString()} m³ (${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar warning" style="width: ${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100)}%;"></div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Hợp đồng thầu phụ & Tổ đội thi công</span>
+                            <span class="metric-values">Đã ký ${dashboardData.unice.contracts_signed} / ${dashboardData.unice.contracts_total} gói (${((dashboardData.unice.contracts_signed / dashboardData.unice.contracts_total) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar success" style="width: ${((dashboardData.unice.contracts_signed / dashboardData.unice.contracts_total) * 100)}%;"></div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Khối lượng thay đổi thiết kế (VO)</span>
+                            <span class="metric-values">${dashboardData.unice.vo_count} hạng mục ghi nhận</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    ${suppliersHtml}
+                    ${concreteHtml}
+                `;
+
+                actions = [
+                    { status: 'red', project: 'UNICE', title: 'Hao hụt bê tông công trường', desc: `Đợt đổ bê tông MLAND hụt ${dashboardData.unice.concrete_pct.replace('-', '')} (lệch ${Math.abs(dashboardData.unice.concrete_diff).toFixed(0)} m³).`, act1: 'Yêu cầu giải trình', act2: 'Xem chi tiết' },
+                    { status: 'red', project: 'UNICE', title: 'Hợp đồng thầu phụ/Tổ đội', desc: `Tiến độ ký hợp đồng chậm trễ. Hiện mới đạt ${dashboardData.unice.contracts_signed}/${dashboardData.unice.contracts_total} gói.`, act1: 'Nhắc nhở QS', act2: 'Xem chi tiết' },
+                    { status: 'yellow', project: 'UNICE', title: 'Hồ sơ thay đổi thiết kế (VO)', desc: `Đang có ${dashboardData.unice.vo_count} hạng mục phát sinh cần trình duyệt giá trị với CĐT.`, act1: 'Xem danh mục', act2: 'Trình CĐT' }
+                ];
+
+            } else if (project === 'howell') {
+                prjName.innerText = "Dự án Nhà máy HOWELL Technology";
+
+                kpiContainer.innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Doanh thu BOQ gốc</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.boq_total)}</div>
+                        <div class="kpi-subtext">HĐ thầu chính</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label">Ngân sách kiểm soát</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.budget_total)}</div>
+                        <div class="kpi-subtext">Chi phí đích (Target Cost)</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label">Ngân sách còn lại</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.remaining_budget)}</div>
+                        <div class="kpi-subtext">Thực chi: ${formatVND(dashboardData.howell.spent_total)}</div>
+                    </div>
+                `;
+
+                let disciplinesHtml = '';
+                if (dashboardData.howell.disciplines && dashboardData.howell.disciplines.length > 0) {
+                    disciplinesHtml = `
+                        <div class="section-header">Phân bổ Dự toán theo Hạng mục</div>
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>Hạng mục thi công</th>
+                                    <th style="text-align: right;">Dự toán phê duyệt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dashboardData.howell.disciplines.map(d => `
+                                    <tr>
+                                        <td><strong>${d.Name}</strong></td>
+                                        <td style="text-align: right; font-weight: 500;">${formatVND(d.Value)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                metricsContainer.innerHTML = `
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-name">Tiến độ chi thực tế so với Ngân sách</span>
+                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_total)} (${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100).toFixed(2)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar success" style="width: ${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100)}%;"></div>
+                        </div>
+                    </div>
+                    ${disciplinesHtml}
+                `;
+
+                actions = [
+                    { status: 'yellow', project: 'HOWELL', title: 'Khởi động dự án', desc: `Dự án mới bắt đầu. Ngân sách kiểm soát đã phê duyệt xong. Hiện mới chi đầu kỳ ${formatVND(dashboardData.howell.spent_total)}.`, act1: 'Xem hồ sơ ngân sách', act2: null }
+                ];
+            }
+
+            // Render action items list
+            actionBadge.innerText = `${actions.length} Cảnh báo`;
+            if (actions.length === 0) {
+                actionContainer.innerHTML = `<div class="action-desc" style="text-align: center; padding: 2rem;">Không có cảnh báo nào cần xử lý.</div>`;
+            } else {
+                actions.forEach(item => {
+                    const btn2Html = item.act2 ? `<button class="btn-action-outline">${item.act2}</button>` : '';
+                    actionContainer.innerHTML += `
+                        <div class="action-item">
+                            <div class="action-info">
+                                <span class="badge-status ${item.status}"></span>
+                                <div>
+                                    <div class="action-title">
+                                        <span class="action-project-tag">${item.project}</span>
+                                        ${item.title}
+                                    </div>
+                                    <div class="action-desc">${item.desc}</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-action-outline">${item.act1}</button>
+                                ${btn2Html}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Run on initial load
+        renderDashboard();
+    </script>
+</body>
+</html>
