@@ -1,8 +1,10 @@
 ﻿{
-    "last_updated":  "2026-06-20 17:04:20",
+    "last_updated":  "2026-06-20 17:29:16",
     "unice":  {
-                  "boq_total":  229359753215,
-                  "spent_total":  51917217437.7569,
+                  "boq_total":  309999768358.333,
+                  "budget_approved":  269303894213.484,
+                  "budget_updated":  272085619555.268,
+                  "spent_total":  149596114996.139,
                   "concrete_design":  13287.6600171475,
                   "concrete_actual":  12449,
                   "concrete_diff":  -838.660017147535,
@@ -66,10 +68,10 @@
                                           ]
               },
     "howell":  {
-                   "boq_total":  61048011043,
-                   "budget_total":  55274383234,
-                   "spent_total":  323317996,
-                   "remaining_budget":  54951065238,
+                   "boq_total":  173439399557.577,
+                   "budget_approved":  186822505482.858,
+                   "budget_updated":  1755591991.73832,
+                   "spent_total":  0,
                    "disciplines":  [
                                        {
                                            "Name":  "Kết cấu thép",
