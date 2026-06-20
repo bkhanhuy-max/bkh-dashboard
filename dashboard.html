@@ -638,9 +638,9 @@
                 
                 // Calculate aggregated figures
                 const totalBoq = dashboardData.unice.boq_total + dashboardData.howell.boq_total;
+                const totalApproved = dashboardData.unice.budget_approved + dashboardData.howell.budget_approved;
+                const totalUpdated = dashboardData.unice.budget_updated + dashboardData.howell.budget_updated;
                 const totalSpent = dashboardData.unice.spent_total + dashboardData.howell.spent_total;
-                const totalBudget = dashboardData.unice.boq_total + dashboardData.howell.budget_total; // approximate
-                const remaining = totalBudget - totalSpent;
 
                 // Render KPI Cards
                 kpiContainer.innerHTML = `
@@ -649,39 +649,44 @@
                         <div class="kpi-value">${formatVND(totalBoq)}</div>
                         <div class="kpi-subtext">2 dự án đang thực hiện</div>
                     </div>
-                    <div class="kpi-card success">
-                        <div class="kpi-label">Chi phí thực tế</div>
-                        <div class="kpi-value">${formatVND(totalSpent)}</div>
-                        <div class="kpi-subtext">Đạt <span class="trend up">${((totalSpent / totalBudget) * 100).toFixed(1)}%</span> ngân sách</div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Tổng NS Phê duyệt</div>
+                        <div class="kpi-value">${formatVND(totalApproved)}</div>
+                        <div class="kpi-subtext">Ngân sách dự phòng ban đầu</div>
                     </div>
                     <div class="kpi-card warning">
-                        <div class="kpi-label">Ngân sách còn lại</div>
-                        <div class="kpi-value">${formatVND(remaining)}</div>
-                        <div class="kpi-subtext">Lũy kế dự phòng an toàn</div>
+                        <div class="kpi-label">Tổng NS Cập nhật</div>
+                        <div class="kpi-value">${formatVND(totalUpdated)}</div>
+                        <div class="kpi-subtext">Theo dõi biến động thực tế</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label">Tổng chi thực tế</div>
+                        <div class="kpi-value">${formatVND(totalSpent)}</div>
+                        <div class="kpi-subtext">Đạt <span class="trend up">${((totalSpent / totalUpdated) * 100).toFixed(1)}%</span> ngân sách cập nhật</div>
                     </div>
                 `;
 
                 // Render Core Metrics
-                const unicePct = ((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100).toFixed(1);
-                const howellPct = ((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100).toFixed(2);
+                const unicePct = ((dashboardData.unice.spent_total / dashboardData.unice.budget_updated) * 100).toFixed(1);
+                const howellPct = dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100).toFixed(2) : "0.00";
 
                 metricsContainer.innerHTML = `
                     <div class="metric-row">
                         <div class="metric-header">
-                            <span class="metric-name">Dự án UNICE Quảng Ngãi - Giải ngân ngân sách</span>
-                            <span class="metric-values">${formatVND(dashboardData.unice.spent_total)} / ${formatVND(dashboardData.unice.boq_total)}</span>
+                            <span class="metric-name">Dự án UNICE Quảng Ngãi - Giải ngân ngân sách cập nhật</span>
+                            <span class="metric-values">${formatVND(dashboardData.unice.spent_total)} / ${formatVND(dashboardData.unice.budget_updated)} (${unicePct}%)</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100)}%;"></div>
+                            <div class="progress-bar" style="width: ${unicePct}%;"></div>
                         </div>
                     </div>
                     <div class="metric-row">
                         <div class="metric-header">
-                            <span class="metric-name">Dự án HOWELL Technology - Giải ngân ngân sách</span>
-                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_total)}</span>
+                            <span class="metric-name">Dự án HOWELL Technology - Giải ngân ngân sách cập nhật</span>
+                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_updated)} (${howellPct}%)</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar success" style="width: ${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100)}%;"></div>
+                            <div class="progress-bar success" style="width: ${howellPct}%;"></div>
                         </div>
                     </div>
                     <div class="metric-row">
@@ -700,20 +705,26 @@
                             <tr>
                                 <th>Tên dự án</th>
                                 <th style="text-align: right;">Doanh thu BOQ</th>
-                                <th style="text-align: right;">Chi phí thực tế</th>
-                                <th style="text-align: right;">Giải ngân %</th>
+                                <th style="text-align: right;">NS Phê duyệt</th>
+                                <th style="text-align: right;">NS Cập nhật</th>
+                                <th style="text-align: right;">Lũy kế Thực chi</th>
+                                <th style="text-align: right;">% Giải ngân</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td><strong>UNICE Quảng Ngãi</strong></td>
                                 <td style="text-align: right;">${formatVND(dashboardData.unice.boq_total)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.unice.budget_approved)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.unice.budget_updated)}</td>
                                 <td style="text-align: right;">${formatVND(dashboardData.unice.spent_total)}</td>
                                 <td style="text-align: right; font-weight: 600; color: var(--color-warning);">${unicePct}%</td>
                             </tr>
                             <tr>
                                 <td><strong>HOWELL Technology</strong></td>
                                 <td style="text-align: right;">${formatVND(dashboardData.howell.boq_total)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.howell.budget_approved)}</td>
+                                <td style="text-align: right;">${formatVND(dashboardData.howell.budget_updated)}</td>
                                 <td style="text-align: right;">${formatVND(dashboardData.howell.spent_total)}</td>
                                 <td style="text-align: right; font-weight: 600; color: var(--color-success);">${howellPct}%</td>
                             </tr>
@@ -732,21 +743,27 @@
             } else if (project === 'unice') {
                 prjName.innerText = "Dự án Nhà máy UNICE Quảng Ngãi";
 
+                const unicePct = ((dashboardData.unice.spent_total / dashboardData.unice.budget_updated) * 100).toFixed(1);
                 kpiContainer.innerHTML = `
                     <div class="kpi-card">
-                        <div class="kpi-label">Dự toán BOQ gốc</div>
+                        <div class="kpi-label">Doanh thu BOQ</div>
                         <div class="kpi-value">${formatVND(dashboardData.unice.boq_total)}</div>
-                        <div class="kpi-subtext">Hợp đồng trọn gói chính thức</div>
+                        <div class="kpi-subtext">Tổng giá trị doanh thu</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Ngân sách Phê duyệt</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.budget_approved)}</div>
+                        <div class="kpi-subtext">Ngân sách duyệt ban đầu</div>
                     </div>
                     <div class="kpi-card warning">
-                        <div class="kpi-label">Thực tế đã chi</div>
-                        <div class="kpi-value">${formatVND(dashboardData.unice.spent_total)}</div>
-                        <div class="kpi-subtext">Đạt <span class="trend neutral">${((dashboardData.unice.spent_total / dashboardData.unice.boq_total) * 100).toFixed(1)}%</span> ngân sách gốc</div>
+                        <div class="kpi-label">Ngân sách Cập nhật</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.budget_updated)}</div>
+                        <div class="kpi-subtext">Ngân sách hiện tại điều chỉnh</div>
                     </div>
                     <div class="kpi-card success">
-                        <div class="kpi-label">Ngân sách còn lại</div>
-                        <div class="kpi-value">${formatVND(dashboardData.unice.boq_total - dashboardData.unice.spent_total)}</div>
-                        <div class="kpi-subtext">🟢 Đang trong vùng kiểm soát</div>
+                        <div class="kpi-label">Lũy kế Thực chi</div>
+                        <div class="kpi-value">${formatVND(dashboardData.unice.spent_total)}</div>
+                        <div class="kpi-subtext">Đạt <span class="trend neutral">${unicePct}%</span> ngân sách cập nhật</div>
                     </div>
                 `;
 
@@ -841,21 +858,27 @@
             } else if (project === 'howell') {
                 prjName.innerText = "Dự án Nhà máy HOWELL Technology";
 
+                const howellPct = dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100).toFixed(2) : "0.00";
                 kpiContainer.innerHTML = `
                     <div class="kpi-card">
-                        <div class="kpi-label">Doanh thu BOQ gốc</div>
+                        <div class="kpi-label">Doanh thu BOQ</div>
                         <div class="kpi-value">${formatVND(dashboardData.howell.boq_total)}</div>
-                        <div class="kpi-subtext">HĐ thầu chính</div>
+                        <div class="kpi-subtext">Tổng giá trị doanh thu</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Ngân sách Phê duyệt</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.budget_approved)}</div>
+                        <div class="kpi-subtext">Ngân sách duyệt ban đầu</div>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-label">Ngân sách Cập nhật</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.budget_updated)}</div>
+                        <div class="kpi-subtext">Ngân sách hiện tại điều chỉnh</div>
                     </div>
                     <div class="kpi-card success">
-                        <div class="kpi-label">Ngân sách kiểm soát</div>
-                        <div class="kpi-value">${formatVND(dashboardData.howell.budget_total)}</div>
-                        <div class="kpi-subtext">Chi phí đích (Target Cost)</div>
-                    </div>
-                    <div class="kpi-card success">
-                        <div class="kpi-label">Ngân sách còn lại</div>
-                        <div class="kpi-value">${formatVND(dashboardData.howell.remaining_budget)}</div>
-                        <div class="kpi-subtext">Thực chi: ${formatVND(dashboardData.howell.spent_total)}</div>
+                        <div class="kpi-label">Lũy kế Thực chi</div>
+                        <div class="kpi-value">${formatVND(dashboardData.howell.spent_total)}</div>
+                        <div class="kpi-subtext">Đạt <span class="trend neutral">${howellPct}%</span> ngân sách cập nhật</div>
                     </div>
                 `;
 
