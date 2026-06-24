@@ -202,7 +202,7 @@ if (Test-Path $uniceMaterialFile) {
         $events = @()
         for ($r = 6; $r -le 450; $r++) {
             $stt = $sheetBT.Cells.Item($r, 1).Text
-            if ($stt -and $stt -match "^\d+$") {
+            if ($stt -and $stt.Trim() -match "^\d+$") {
                 $date = $sheetBT.Cells.Item($r, 2).Text
                 $name = $sheetBT.Cells.Item($r, 3).Text
                 $actBT = $sheetBT.Cells.Item($r, 6).Value2
@@ -302,7 +302,7 @@ if (Test-Path $unicePlanFile) {
             for ($r = 12; $r -le 150; $r++) {
                 $stt = $sheetKH.Cells.Item($r, 1).Text
                 $name = $sheetKH.Cells.Item($r, 2).Text
-                if ($name -and $stt -match "^\d+$") {
+                if ($name -and $stt.Trim() -match "^\d+$") {
                     $totalCount++
                     $status = $sheetKH.Cells.Item($r, 13).Text
                     if ($status -eq "Hoàn thành" -or $status -eq "Đã ký") {
@@ -312,8 +312,8 @@ if (Test-Path $unicePlanFile) {
             }
         }
         
-        if ($signedCount -gt 0) { $data.unice.contracts_signed = $signedCount }
-        if ($totalCount -gt 0) { $data.unice.contracts_total = $totalCount }
+        $data.unice.contracts_signed = $signedCount
+        $data.unice.contracts_total = $totalCount
         
         # 3.2 Material Submittals (MAU TRINH CDT)
         $sheetKHCDT = $wb.Sheets.Item("4, MAU TRINH CDT")
@@ -367,7 +367,7 @@ if (Test-Path $uniceVoFile) {
         for ($r = 15; $r -le 200; $r++) {
             $stt = $sheetVO.Cells.Item($r, 1).Text
             $desc = $sheetVO.Cells.Item($r, 7).Text
-            if (($stt -and $stt -match "^\d+$") -or $desc) {
+            if (($stt -and $stt.Trim() -match "^\d+$") -or $desc) {
                 $voCount++
             }
         }
