@@ -21,6 +21,8 @@ function SendJson($response, $json, $statusCode = 200) {
     $response.Close()
 }
 
+$IsUpdating = $false
+
 WriteLog "=== BKH-AI API Server khoi dong port $Port ==="
 
 # Vong lap tu khoi dong neu gap loi
@@ -55,6 +57,12 @@ while ($true) {
                     SendJson $res $json
 
                 } elseif ($path -eq "/api/update") {
+                    if ($IsUpdating) {
+                        WriteLog "⚠️ Dang co tien trinh cap nhat dang chay. Tu choi request."
+                        SendJson $res '{"success":false,"error":"Hệ thống đang tiến hành cập nhật, vui lòng đợi trong giây lát...","output":""}' 200
+                        continue
+                    }
+                    $IsUpdating = $true
                     WriteLog "▶ Bat dau cap nhat..."
                     $start = Get-Date
                     $out = ""
@@ -64,6 +72,8 @@ while ($true) {
                         WriteLog "✅ deploy.ps1 xong"
                     } catch {
                         $err = $_.ToString()
+                    } finally {
+                        $IsUpdating = $false
                     }
 
                     $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
