@@ -17,8 +17,10 @@ $howellBudgetFile = "d:\BKH-AI\01. DU AN 2026\02. HOWELL\01. REPORT\1. HOWELL - 
 $data = [PSCustomObject]@{
     last_updated = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
     unice = [PSCustomObject]@{
-        boq_total = 229359753215.0
-        spent_total = 51917217438.0
+        boq_total = 309999768358.0
+        budget_approved = 269303894213.0
+        budget_updated = 272085619555.0
+        spent_total = 149596114996.0
         concrete_design = 13287.66
         concrete_actual = 12449.0
         concrete_diff = -838.66
@@ -30,10 +32,10 @@ $data = [PSCustomObject]@{
         top_concrete_events = @()
     }
     howell = [PSCustomObject]@{
-        boq_total = 61048011043.0
-        budget_total = 55274383234.0
-        spent_total = 323317996.0
-        remaining_budget = 54951065238.0
+        boq_total = 173439399558.0
+        budget_approved = 186822505483.0
+        budget_updated = 1755591992.0
+        spent_total = 0.0
         disciplines = @(
             [PSCustomObject]@{ Name = "Kết cấu thép"; Value = 35466546654.0 },
             [PSCustomObject]@{ Name = "Cơ điện (MEP)"; Value = 12058958958.0 },
@@ -63,15 +65,20 @@ if (Test-Path $uniceBudgetFile) {
     try {
         $wb = $excel.Workbooks.Open($uniceBudgetFile, [System.Type]::Missing, $true)
         
-        # BOQ Total
-        $sheetBOQ = $wb.Sheets.Item("0, BOQ 15,10")
-        $val1 = $sheetBOQ.Cells.Item(3393, 14).Value2
-        $data.unice.boq_total = Get-SafeDouble $val1 229359753215.0
+        # Read from sheet "1. NGAN SACH"
+        $sheetNS = $wb.Sheets.Item("1. NGAN SACH")
+        $valBoq = $sheetNS.Cells.Item(12, 3).Value2
+        $valApproved = $sheetNS.Cells.Item(17, 9).Value2
+        $valUpdated = $sheetNS.Cells.Item(17, 13).Value2
+        $valSpent = $sheetNS.Cells.Item(17, 17).Value2
         
-        # Chi Phi Total & Suppliers analysis
+        $data.unice.boq_total = Get-SafeDouble $valBoq 309999768358.0
+        $data.unice.budget_approved = Get-SafeDouble $valApproved 269303894213.0
+        $data.unice.budget_updated = Get-SafeDouble $valUpdated 272085619555.0
+        $data.unice.spent_total = Get-SafeDouble $valSpent 149596114996.0
+        
+        # Open "0, CHI PHI" sheet just for supplier breakdown analysis
         $sheetCP = $wb.Sheets.Item("0, CHI PHI")
-        $val2 = $sheetCP.Cells.Item(2, 10).Value2 # Row 2 Col 10 contains 51,917,217,438
-        $data.unice.spent_total = Get-SafeDouble $val2 51917217438.0
         
         # Supplier breakdown analysis
         $costs = @()
@@ -238,19 +245,24 @@ Write-Output "Processing HOWELL project..."
 if (Test-Path $howellBudgetFile) {
     try {
         $wb = $excel.Workbooks.Open($howellBudgetFile, [System.Type]::Missing, $true)
+        
+        # Extract BOQ from sheet "00, BOQ - DAU VAO" Row 6, Col 15
+        $sheetBOQ = $wb.Sheets.Item("00, BOQ - DAU VAO")
+        $valBoq = $sheetBOQ.Cells.Item(6, 15).Value2
+        $data.howell.boq_total = Get-SafeDouble $valBoq 173439399558.0
+        
+        # Extract Budget details from sheet "01. NGAN SACH" Row 17
         $sheetNS = $wb.Sheets.Item("01. NGAN SACH")
+        $valApproved = $sheetNS.Cells.Item(17, 9).Value2
+        $valUpdated = $sheetNS.Cells.Item(17, 13).Value2
+        $valSpent = $sheetNS.Cells.Item(17, 17).Value2
         
-        $boqVal = $sheetNS.Cells.Item(4, 7).Value2
-        $budgetVal = $sheetNS.Cells.Item(4, 14).Value2
-        $spentVal = $sheetNS.Cells.Item(4, 22).Value2
-        
-        $data.howell.boq_total = Get-SafeDouble $boqVal 61048011043.0
-        $data.howell.budget_total = Get-SafeDouble $budgetVal 55274383234.0
-        $data.howell.spent_total = Get-SafeDouble $spentVal 323317996.0
-        $data.howell.remaining_budget = $data.howell.budget_total - $data.howell.spent_total
+        $data.howell.budget_approved = Get-SafeDouble $valApproved 186822505483.0
+        $data.howell.budget_updated = Get-SafeDouble $valUpdated 1755591992.0
+        $data.howell.spent_total = Get-SafeDouble $valSpent 0.0
         
         $wb.Close($false)
-        Write-Output "  HOWELL Budget details read successfully: BOQ=$($data.howell.boq_total), Budget=$($data.howell.budget_total), Spent=$($data.howell.spent_total)"
+        Write-Output "  HOWELL Budget details read successfully: BOQ=$($data.howell.boq_total), Approved=$($data.howell.budget_approved), Updated=$($data.howell.budget_updated), Spent=$($data.howell.spent_total)"
     } catch {
         Write-Warning "Error reading HOWELL Budget: $_"
     }

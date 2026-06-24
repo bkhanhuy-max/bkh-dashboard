@@ -573,10 +573,10 @@
                 ]
             },
             "howell": {
-                "boq_total": 61048011043,
-                "budget_total": 55274383234,
-                "spent_total": 323317996,
-                "remaining_budget": 54951065238,
+                "boq_total": 173439399558.0,
+                "budget_approved": 186822505482.858,
+                "budget_updated": 1755591991.73832,
+                "spent_total": 0.0,
                 "disciplines": [
                     { "Name": "Kết cấu thép", "Value": 35466546654 },
                     { "Name": "Cơ điện (MEP)", "Value": 12058958958 },
@@ -908,11 +908,11 @@
                 metricsContainer.innerHTML = `
                     <div class="metric-row">
                         <div class="metric-header">
-                            <span class="metric-name">Tiến độ chi thực tế so với Ngân sách</span>
-                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_total)} (${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100).toFixed(2)}%)</span>
+                            <span class="metric-name">Tiến độ chi thực tế so với Ngân sách cập nhật</span>
+                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_updated)} (${dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100).toFixed(2) : "0.00"}%)</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar success" style="width: ${((dashboardData.howell.spent_total / dashboardData.howell.budget_total) * 100)}%;"></div>
+                            <div class="progress-bar success" style="width: ${dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100) : 0}%;"></div>
                         </div>
                     </div>
                     ${disciplinesHtml}
