@@ -383,6 +383,49 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
+        /* Settings Overlay */
+        .chat-settings-overlay {
+            display: none;
+            position: absolute;
+            top: 77px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10;
+            padding: 1.5rem;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all var(--transition-speed);
+        }
+        .chat-settings-overlay.open {
+            display: flex;
+        }
+        
+        /* Typing indicator styling */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.2rem 0;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
         /* Chat Messages */
         .chat-messages {
             flex: 1;
@@ -1440,9 +1483,29 @@
                     <span>Trực tuyến</span>
                 </div>
             </div>
-            <button class="chat-close-btn" onclick="toggleChatbot(false)">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="chat-close-btn" onclick="toggleChatSettings(true)" title="Cài đặt API Key">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chat-close-btn" onclick="toggleChatbot(false)" title="Đóng">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Settings Overlay -->
+        <div class="chat-settings-overlay" id="chat-settings-overlay">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; color: white;">Cấu hình Gemini API</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Vui lòng nhập API Key của Google Gemini để trợ lý có thể đọc dữ liệu và trả lời mọi câu hỏi của bạn. API Key được lưu bảo mật ở trình duyệt của bạn (localStorage).</p>
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">GEMINI API KEY</label>
+                <input type="password" id="gemini-api-key-input" placeholder="Nhập API Key ở đây..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.8rem; color: white; font-size: 0.85rem; outline: none;">
+            </div>
+            <p style="font-size: 0.75rem; color: var(--color-primary);"><a href="https://aistudio.google.com/" target="_blank" style="color: var(--color-primary); text-decoration: underline;">Lấy Gemini API Key miễn phí tại đây</a></p>
+            <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <button onclick="saveChatSettings()" style="flex: 1; background: var(--color-primary); border: none; color: white; padding: 0.6rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Lưu cấu hình</button>
+                <button onclick="toggleChatSettings(false)" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Đóng</button>
+            </div>
         </div>
         <div class="chat-messages" id="chat-messages">
             <div class="chat-message bot">
@@ -1465,14 +1528,46 @@
 
     <script>
         // Global chat UI handlers
+        let chatHistory = [];
+
         function toggleChatbot(show) {
             const chatWindow = document.getElementById('chat-window');
             if (show) {
                 chatWindow.classList.add('open');
                 document.getElementById('chat-input').focus();
+                
+                // Automatically open settings if no API key is set
+                const apiKey = localStorage.getItem('hp_cons_gemini_api_key');
+                if (!apiKey) {
+                    setTimeout(() => {
+                        toggleChatSettings(true);
+                    }, 300);
+                }
             } else {
                 chatWindow.classList.remove('open');
             }
+        }
+
+        function toggleChatSettings(show) {
+            const overlay = document.getElementById('chat-settings-overlay');
+            const input = document.getElementById('gemini-api-key-input');
+            if (show) {
+                overlay.classList.add('open');
+                input.value = localStorage.getItem('hp_cons_gemini_api_key') || '';
+            } else {
+                overlay.classList.remove('open');
+            }
+        }
+
+        function saveChatSettings() {
+            const key = document.getElementById('gemini-api-key-input').value.trim();
+            if (!key) {
+                alert("Vui lòng nhập API Key của Gemini!");
+                return;
+            }
+            localStorage.setItem('hp_cons_gemini_api_key', key);
+            toggleChatSettings(false);
+            addChatMessage("✅ Cấu hình API Key thành công! Tôi đã sẵn sàng trả lời các câu hỏi của bạn.", 'bot');
         }
 
         function sendSuggestion(text) {
@@ -1480,131 +1575,116 @@
             handleSendMessage();
         }
 
-        // Handle sending message
-        function handleSendMessage() {
+        // Helper to format basic Markdown to HTML
+        function formatMarkdown(text) {
+            let escaped = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            
+            // Bold **text** -> <strong>text</strong>
+            escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Bullets - text or * text -> • text
+            escaped = escaped.replace(/^\s*[-*]\s+(.*?)$/gm, '• $1');
+            
+            // Newlines to <br>
+            return escaped.replace(/\n/g, '<br>');
+        }
+
+        // Handle sending message via Gemini API
+        async function handleSendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text) return;
             
-            // User message
+            const apiKey = localStorage.getItem('hp_cons_gemini_api_key');
+            if (!apiKey) {
+                addChatMessage(text, 'user');
+                input.value = '';
+                setTimeout(() => {
+                    addChatMessage("⚠️ Bạn chưa cấu hình API Key. Đang mở cài đặt...", "bot");
+                    toggleChatSettings(true);
+                }, 400);
+                return;
+            }
+            
+            // Show user message
             addChatMessage(text, 'user');
             input.value = '';
             
-            // Bot typing simulation
-            setTimeout(() => {
-                const response = generateBotResponse(text);
-                addChatMessage(response, 'bot');
-            }, 400);
+            // Append user message to history
+            chatHistory.push({ role: 'user', parts: [{ text: text }] });
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
+            }
+            
+            // Show typing indicator
+            const messagesContainer = document.getElementById('chat-messages');
+            const typingEl = document.createElement('div');
+            typingEl.classList.add('chat-message', 'bot');
+            typingEl.id = 'chat-typing-indicator';
+            typingEl.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+            messagesContainer.appendChild(typingEl);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            try {
+                const systemPrompt = `Bạn là Trợ lý ảo HP Cons, hỗ trợ ban quản lý dự án Hưng Phước Construction.
+Dưới đây là cơ sở dữ liệu các dự án đang thi công của Hưng Phước Construction (dưới dạng JSON):
+${JSON.stringify(dashboardData, null, 2)}
+
+Hãy trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn, súc tích bằng tiếng Việt dựa hoàn toàn trên dữ liệu trên.
+Quy tắc:
+1. Khi nhắc đến số tiền lớn, hãy định dạng thành tỷ VND (ví dụ: 17.73 tỷ VND thay vì 17732021804 VND) hoặc triệu VND để dễ đọc.
+2. Nếu thông tin không có trong dữ liệu, hãy trả lời lịch sự rằng dữ liệu hiện tại không đề cập đến điều này.
+3. Trình bày đẹp mắt bằng Markdown.`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        },
+                        contents: chatHistory
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Lỗi kết nối API: " + response.status);
+                }
+                
+                const data = await response.json();
+                const replyText = data.candidates[0].content.parts[0].text;
+                
+                // Remove typing indicator
+                typingEl.remove();
+                
+                // Display reply
+                addChatMessage(replyText, 'bot');
+                
+                // Append bot response to history
+                chatHistory.push({ role: 'model', parts: [{ text: replyText }] });
+            } catch (err) {
+                console.error(err);
+                typingEl.remove();
+                addChatMessage("❌ Có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra lại API Key hoặc kết nối mạng.", 'bot');
+            }
         }
 
         function addChatMessage(text, sender) {
             const messagesContainer = document.getElementById('chat-messages');
             const messageEl = document.createElement('div');
             messageEl.classList.add('chat-message', sender);
-            messageEl.innerHTML = text.replace(/\n/g, '<br>');
+            if (sender === 'bot') {
+                messageEl.innerHTML = formatMarkdown(text);
+            } else {
+                messageEl.innerHTML = text.replace(/\n/g, '<br>');
+            }
             messagesContainer.appendChild(messageEl);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        // Basic Vietnamese Keyword-based Bot Brain
-        function generateBotResponse(query) {
-            const q = query.toLowerCase();
-            
-            if (!dashboardData) {
-                return "Hiện chưa tải được dữ liệu, vui lòng thử lại sau.";
-            }
-            
-            const unice = dashboardData.unice;
-            const howell = dashboardData.howell;
-            
-            function formatBill(val) {
-                return (val / 1e9).toFixed(2) + " tỷ VND";
-            }
-
-            if (q.includes('unice') || q.includes('quảng ngãi')) {
-                if (q.includes('ngân sách') || q.includes('phê duyệt') || q.includes('boq')) {
-                    return `Dự án **UNICE Quảng Ngãi**:\n- Doanh thu BOQ: ${formatBill(unice.boq_total)}\n- Ngân sách phê duyệt: ${formatBill(unice.budget_approved)}\n- Ngân sách cập nhật: ${formatBill(unice.budget_updated)}`;
-                }
-                if (q.includes('thực chi') || q.includes('chi phí') || q.includes('spent') || q.includes('giải ngân')) {
-                    const pct = ((unice.spent_total / unice.budget_updated) * 100).toFixed(1) + "%";
-                    return `Thực chi lũy kế của dự án **UNICE**:\n- Giá trị: ${formatBill(unice.spent_total)}\n- Đạt tỷ lệ giải ngân: ${pct} ngân sách cập nhật.`;
-                }
-                if (q.includes('bê tông') || q.includes('concrete')) {
-                    return `Tiến độ bê tông dự án **UNICE**:\n- Thiết kế: ${unice.concrete_design.toLocaleString()} m³\n- Thực tế cấp: ${unice.concrete_actual.toLocaleString()} m³\n- Chênh lệch: ${unice.concrete_diff.toLocaleString()} m³ (${unice.concrete_pct}).`;
-                }
-                if (q.includes('vật tư') || q.includes('trình mẫu') || q.includes('submittal')) {
-                    return `Báo cáo vật tư trình mẫu (UNICE):\n- Tổng hồ sơ: ${unice.submittal_total} mẫu\n- Đã duyệt: ${unice.submittal_approved} mẫu\n- Đang trình: ${unice.submittal_submitted} mẫu (tỷ lệ trình đạt ${(unice.submittal_submitted / unice.submittal_total * 100).toFixed(1)}%).`;
-                }
-                if (q.includes('hợp đồng') || q.includes('nhà thầu') || q.includes('thầu phụ') || q.includes('subcontractor')) {
-                    return `Tình hình hợp đồng thầu phụ/tổ đội (UNICE):\n- Đã ký kết: **${unice.contracts_signed}/${unice.contracts_total} gói**.\n- Hiện đạt tỷ lệ: ${(unice.contracts_signed / unice.contracts_total * 100).toFixed(1)}% kế hoạch ký kết.`;
-                }
-                if (q.includes('phát sinh') || q.includes('vo')) {
-                    return `Dự án **UNICE Quảng Ngãi** đang theo dõi **${unice.vo_count}** hạng mục phát sinh (VO) cần trình duyệt giá với Chủ đầu tư.`;
-                }
-                
-                return `Dự án **UNICE Quảng Ngãi** hiện có:\n- Ngân sách: ${formatBill(unice.budget_updated)}\n- Thực chi: ${formatBill(unice.spent_total)}\n- Đã ký: ${unice.contracts_signed}/${unice.contracts_total} hợp đồng thầu phụ.\n- Phát sinh: ${unice.vo_count} hạng mục VO.\nBạn có thể hỏi thêm về "bê tông", "vật tư trình mẫu" hoặc "nhà thầu" của dự án này.`;
-            }
-            
-            if (q.includes('howell')) {
-                if (q.includes('thực chi') || q.includes('chi phí') || q.includes('chi')) {
-                    return `Dự án **HOWELL Technology** Đang cập nhật (Chưa phát sinh chi phí thực tế).`;
-                }
-                return `Dự án **HOWELL Technology** hiện trạng:\n- Doanh thu BOQ: ${formatBill(howell.boq_total)}\n- Ngân sách phê duyệt: ${formatBill(howell.budget_approved)}\n- Chi phí thực tế: Đang cập nhật (Chưa phát sinh chi phí).`;
-            }
-            
-            // Fallback general keyword matches (defaults to UNICE or general info if project is not specified)
-            if (q.includes('hợp đồng') || q.includes('nhà thầu') || q.includes('thầu phụ') || q.includes('subcontractor')) {
-                return `Tình hình hợp đồng thầu phụ/tổ đội (UNICE):\n- Đã ký kết: **${unice.contracts_signed}/${unice.contracts_total} gói**.\n- Hiện đạt tỷ lệ: ${(unice.contracts_signed / unice.contracts_total * 100).toFixed(1)}% kế hoạch ký kết.`;
-            }
-            if (q.includes('bê tông') || q.includes('concrete')) {
-                return `Tiến độ bê tông dự án **UNICE**:\n- Thiết kế: ${unice.concrete_design.toLocaleString()} m³\n- Thực tế cấp: ${unice.concrete_actual.toLocaleString()} m³\n- Chênh lệch: ${unice.concrete_diff.toLocaleString()} m³ (${unice.concrete_pct}).`;
-            }
-            if (q.includes('vật tư') || q.includes('trình mẫu') || q.includes('submittal')) {
-                return `Báo cáo vật tư trình mẫu (UNICE):\n- Tổng hồ sơ: ${unice.submittal_total} mẫu\n- Đã duyệt: ${unice.submittal_approved} mẫu\n- Đang trình: ${unice.submittal_submitted} mẫu (tỷ lệ trình đạt ${(unice.submittal_submitted / unice.submittal_total * 100).toFixed(1)}%).`;
-            }
-            if (q.includes('phát sinh') || q.includes('vo')) {
-                return `Dự án **UNICE Quảng Ngãi** đang theo dõi **${unice.vo_count}** hạng mục phát sinh (VO) cần trình duyệt giá với Chủ đầu tư.`;
-            }
-            if (q.includes('ngân sách') || q.includes('phê duyệt') || q.includes('boq')) {
-                return `Tổng ngân sách được duyệt của Hưng Phước:\n- UNICE Quảng Ngãi: ${formatBill(unice.budget_updated)} (Ngân sách cập nhật)\n- HOWELL Technology: ${formatBill(howell.budget_approved)} (Ngân sách phê duyệt)`;
-            }
-            if (q.includes('thực chi') || q.includes('chi phí') || q.includes('spent') || q.includes('giải ngân')) {
-                return `Chi phí thực tế lũy kế của các dự án:\n- UNICE Quảng Ngãi: ${formatBill(unice.spent_total)}\n- HOWELL Technology: Đang cập nhật (Chưa phát sinh chi phí).`;
-            }
-
-            if (q.includes('tổng quan') || q.includes('hệ thống') || q.includes('tất cả')) {
-                const totalBoq = formatBill(unice.boq_total + howell.boq_total);
-                const totalApproved = formatBill(unice.budget_approved + howell.budget_approved);
-                return `Tổng quan các dự án của Hưng Phước:\n- Tổng doanh thu BOQ: ${totalBoq}\n- Tổng ngân sách phê duyệt: ${totalApproved}\n- Dự án đang thực hiện: 2 dự án (UNICE và HOWELL).\n- Tổng lũy kế thực chi: ${formatBill(unice.spent_total)} (chủ yếu tập trung ở dự án UNICE).`;
-            }
-            
-            if (q.includes('hao hụt') || q.includes('vật tư còn lại') || q.includes('vật tư')) {
-                let text = "Top khối lượng vật tư còn lại (UNICE):\n";
-                if (unice.top_remaining_materials && unice.top_remaining_materials.length > 0) {
-                    unice.top_remaining_materials.forEach((m, idx) => {
-                        text += `${idx + 1}. **${m.Name}**: ${m.Remaining.toLocaleString()} ${m.Unit}\n`;
-                    });
-                    return text;
-                }
-                return "Hiện chưa có dữ liệu hao hụt vật tư chi tiết.";
-            }
-
-            if (q.includes('hạng mục') || q.includes('giá trị lớn') || q.includes('ngân sách còn lại')) {
-                let text = "Top hạng mục có giá trị lớn còn lại (UNICE):\n";
-                if (unice.top_remaining_categories && unice.top_remaining_categories.length > 0) {
-                    unice.top_remaining_categories.forEach((c, idx) => {
-                        text += `${idx + 1}. **${c.Name}**: ${formatBill(c.Value)}\n`;
-                    });
-                    return text;
-                }
-                return "Hiện chưa có dữ liệu hạng mục ngân sách còn lại.";
-            }
-            
-            if (q.includes('xin chào') || q.includes('hello') || q.includes('hi') || q.includes('chào')) {
-                return "Xin chào! Tôi là trợ lý ảo HP Cons. Tôi có thể cung cấp các số liệu mới nhất về ngân sách, thực chi, hao hụt vật tư và tiến độ hợp đồng thầu phụ của các dự án UNICE và HOWELL. Bạn cần hỏi về dự án nào?";
-            }
-
-            return "Tôi chưa hiểu câu hỏi của bạn. Bạn có thể chọn các nút gợi ý nhanh bên dưới hoặc hỏi các câu hỏi chứa từ khóa như: 'unice', 'howell', 'bê tông', 'hao hụt vật tư', 'hợp đồng',... để tôi tra cứu số liệu.";
         }
 
         // Tab Switching logic
