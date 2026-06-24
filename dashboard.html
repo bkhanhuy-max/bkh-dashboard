@@ -744,8 +744,8 @@
                                 <td style="text-align: right;">${formatVND(dashboardData.howell.boq_total)}</td>
                                 <td style="text-align: right;">${formatVND(dashboardData.howell.budget_approved)}</td>
                                 <td style="text-align: right;">${formatVND(dashboardData.howell.budget_updated)}</td>
-                                <td style="text-align: right;">${formatVND(dashboardData.howell.spent_total)}</td>
-                                <td style="text-align: right; font-weight: 600; color: var(--color-success);">${howellPct}%</td>
+                                <td style="text-align: right;">${dashboardData.howell.spent_total > 0 ? formatVND(dashboardData.howell.spent_total) : "Đang cập nhật"}</td>
+                                <td style="text-align: right; font-weight: 600; color: var(--color-success);">${dashboardData.howell.spent_total > 0 ? `${howellPct}%` : "Đang cập nhật"}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -898,8 +898,8 @@
                     </div>
                     <div class="kpi-card success">
                         <div class="kpi-label">Lũy kế Thực chi</div>
-                        <div class="kpi-value">${formatVND(dashboardData.howell.spent_total)}</div>
-                        <div class="kpi-subtext">Đạt <span class="trend neutral">${howellPct}%</span> ngân sách cập nhật</div>
+                        <div class="kpi-value">${dashboardData.howell.spent_total > 0 ? formatVND(dashboardData.howell.spent_total) : "Đang cập nhật"}</div>
+                        <div class="kpi-subtext">${dashboardData.howell.spent_total > 0 ? `Đạt <span class="trend neutral">${howellPct}%</span> ngân sách cập nhật` : "Chưa phát sinh chi phí"}</div>
                     </div>
                 `;
 
@@ -930,10 +930,10 @@
                     <div class="metric-row">
                         <div class="metric-header">
                             <span class="metric-name">Tiến độ chi thực tế so với Ngân sách cập nhật</span>
-                            <span class="metric-values">${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_updated)} (${dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100).toFixed(2) : "0.00"}%)</span>
+                            <span class="metric-values">${dashboardData.howell.spent_total > 0 ? `${formatVND(dashboardData.howell.spent_total)} / ${formatVND(dashboardData.howell.budget_updated)} (${howellPct}%)` : "Đang cập nhật"}</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar success" style="width: ${dashboardData.howell.budget_updated > 0 ? ((dashboardData.howell.spent_total / dashboardData.howell.budget_updated) * 100) : 0}%;"></div>
+                            <div class="progress-bar success" style="width: ${dashboardData.howell.spent_total > 0 ? howellPct : 0}%;"></div>
                         </div>
                     </div>
                     ${disciplinesHtml}
