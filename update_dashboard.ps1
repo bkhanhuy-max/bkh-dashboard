@@ -33,6 +33,8 @@ $data = [PSCustomObject]@{
         submittal_submitted = 11
         top_suppliers = @()
         top_concrete_events = @()
+        top_remaining_materials = @()
+        top_remaining_categories = @()
     }
     howell = [PSCustomObject]@{
         boq_total = 173439399558.0
@@ -80,6 +82,60 @@ if (Test-Path $uniceBudgetFile) {
         $data.unice.budget_updated = Get-SafeDouble $valUpdated 272085619555.0
         $data.unice.spent_total = Get-SafeDouble $valSpent 149596114996.0
         
+        # Top remaining categories extraction
+        $rangeNS = $sheetNS.UsedRange
+        $valsNS = $rangeNS.Value2
+        $rowsNS = $valsNS.GetLength(0)
+        
+        $targetIds = @("PCCC", "MEP", "KETCAUTHEP", "BT", "CT", "CUA")
+        $sums = @{}
+        $names = @{}
+        foreach ($id in $targetIds) {
+            $sums[$id] = 0.0
+            $names[$id] = ""
+        }
+        
+        for ($r = 12; $r -le $rowsNS; $r++) {
+            $idVal = $valsNS[$r, 2]
+            if ($idVal -ne $null) {
+                $id = $idVal.ToString().Trim()
+                if ($targetIds -contains $id) {
+                    $name = $valsNS[$r, 4]
+                    $remainingVal = $valsNS[$r, 21]
+                    $remaining = Get-SafeDouble $remainingVal 0.0
+                    
+                    $sums[$id] += $remaining
+                    if ($names[$id] -eq "" -and $name -ne $null) {
+                        $names[$id] = $name.ToString().Trim()
+                    }
+                }
+            }
+        }
+        
+        $cleanNames = @{
+            "PCCC" = "Công tác PCCC dự án"
+            "MEP" = "Công tác điện nước (MEP)"
+            "KETCAUTHEP" = "Công tác lắp dựng KCT"
+            "BT" = "Công tác bê tông (Nhân công & Vật tư)"
+            "CT" = "Công tác cốt thép (Nhân công & Vật tư)"
+            "CUA" = "Công tác cửa các loại (CCLĐ)"
+        }
+        
+        $topCategories = @()
+        foreach ($id in $targetIds) {
+            $val = $sums[$id]
+            if ($val -gt 0) {
+                $displayName = if ($cleanNames.ContainsKey($id)) { $cleanNames[$id] } else { $names[$id] }
+                $topCategories += [PSCustomObject]@{
+                    Name = $displayName
+                    Value = $val
+                }
+            }
+        }
+        if ($topCategories.Count -gt 0) {
+            $data.unice.top_remaining_categories = $topCategories | Sort-Object Value -Descending
+        }
+        
         # Open "0, CHI PHI" sheet just for supplier breakdown analysis
         $sheetCP = $wb.Sheets.Item("0, CHI PHI")
         
@@ -124,10 +180,12 @@ if ($data.unice.top_suppliers.Count -eq 0) {
     )
 }
 
-# 2. Material (Concrete)
+# 2. Material (Concrete & Remaining Materials)
 if (Test-Path $uniceMaterialFile) {
     try {
         $wb = $excel.Workbooks.Open($uniceMaterialFile, [System.Type]::Missing, $true)
+        
+        # 2.1 Concrete (II.2 BT NHAP THUC TE)
         $sheetBT = $wb.Sheets.Item("II.2 BT NHAP THUC TE")
         
         $design = $sheetBT.Cells.Item(5, 5).Value2
@@ -164,10 +222,54 @@ if (Test-Path $uniceMaterialFile) {
             $data.unice.top_concrete_events = $events | Sort-Object Volume -Descending | Select-Object -First 5
         }
         
+        # 2.2 Remaining Materials (BANG TONG HOP)
+        $sheetVT = $wb.Sheets.Item("BANG TONG HOP")
+        $rangeVT = $sheetVT.UsedRange
+        $valsVT = $rangeVT.Value2
+        
+        $materials = @()
+        $unitMap = @{
+            "Bê Tông" = "m³"
+            "Bulong Liên Kết" = "bộ"
+            "Bulong Neo" = "cái"
+            "Cốt Thép Cây" = "kg"
+            "Thép lưới hàn" = "kg"
+            "Tole Mái" = "m²"
+            "Tole sáng" = "m²"
+            "Xi Măng" = "kg"
+            "Cống bê tông" = "md"
+        }
+        
+        for ($r = 9; $r -le 25; $r++) {
+            $nameVal = $valsVT[$r, 3]
+            if ($nameVal -and $nameVal.ToString().Trim() -ne "") {
+                $name = $nameVal.ToString().Trim()
+                $calc = Get-SafeDouble $valsVT[$r, 4] 0.0
+                $used = Get-SafeDouble $valsVT[$r, 6] 0.0
+                $diffVal = Get-SafeDouble $valsVT[$r, 8] 0.0
+                
+                $unit = if ($unitMap.ContainsKey($name)) { $unitMap[$name] } else { "" }
+                
+                if ($diffVal -gt 0) {
+                    $materials += [PSCustomObject]@{
+                        Name = $name
+                        Calc = $calc
+                        Used = $used
+                        Remaining = $diffVal
+                        Unit = $unit
+                    }
+                }
+            }
+        }
+        
+        if ($materials.Count -gt 0) {
+            $data.unice.top_remaining_materials = $materials | Sort-Object Remaining -Descending | Select-Object -First 5
+        }
+        
         $wb.Close($false)
-        Write-Output "  Concrete details read successfully."
+        Write-Output "  Concrete & Remaining materials read successfully."
     } catch {
-        Write-Warning "Error reading UNICE Concrete: $_"
+        Write-Warning "Error reading UNICE Concrete/Materials: $_"
     }
 }
 

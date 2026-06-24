@@ -1,5 +1,5 @@
 ﻿{
-    "last_updated":  "2026-06-24 10:17:27",
+    "last_updated":  "2026-06-24 10:36:06",
     "unice":  {
                   "boq_total":  309999768358.333,
                   "budget_approved":  269303894213.484,
@@ -68,7 +68,70 @@
                                                   "Volume":  310,
                                                   "Mac":  " M300 "
                                               }
-                                          ]
+                                          ],
+                  "top_remaining_materials":  [
+                                                  {
+                                                      "Name":  "Thép lưới hàn",
+                                                      "Calc":  229467.12,
+                                                      "Used":  165021.58434,
+                                                      "Remaining":  64445.53566,
+                                                      "Unit":  "kg"
+                                                  },
+                                                  {
+                                                      "Name":  "Bulong Liên Kết",
+                                                      "Calc":  65234.16,
+                                                      "Used":  5988,
+                                                      "Remaining":  59246.16,
+                                                      "Unit":  "bộ"
+                                                  },
+                                                  {
+                                                      "Name":  "Tole Mái",
+                                                      "Calc":  40861.671,
+                                                      "Used":  21457.9921,
+                                                      "Remaining":  19403.6789,
+                                                      "Unit":  "m²"
+                                                  },
+                                                  {
+                                                      "Name":  "Xi Măng",
+                                                      "Calc":  13168.05,
+                                                      "Used":  4240,
+                                                      "Remaining":  8928.05,
+                                                      "Unit":  "kg"
+                                                  },
+                                                  {
+                                                      "Name":  "Bê Tông",
+                                                      "Calc":  20256.1764902481,
+                                                      "Used":  12449,
+                                                      "Remaining":  7807.17649024807,
+                                                      "Unit":  "m³"
+                                                  }
+                                              ],
+                  "top_remaining_categories":  [
+                                                   {
+                                                       "Name":  "Công tác PCCC dự án",
+                                                       "Value":  17732021804
+                                                   },
+                                                   {
+                                                       "Name":  "Công tác bê tông (Nhân công \u0026 Vật tư)",
+                                                       "Value":  10453224757.09033
+                                                   },
+                                                   {
+                                                       "Name":  "Công tác điện nước (MEP)",
+                                                       "Value":  9702891860.14815
+                                                   },
+                                                   {
+                                                       "Name":  "Công tác lắp dựng KCT",
+                                                       "Value":  8761126755.77461
+                                                   },
+                                                   {
+                                                       "Name":  "Công tác cốt thép (Nhân công \u0026 Vật tư)",
+                                                       "Value":  8574606062.625
+                                                   },
+                                                   {
+                                                       "Name":  "Công tác cửa các loại (CCLĐ)",
+                                                       "Value":  6049560035.07692
+                                                   }
+                                               ]
               },
     "howell":  {
                    "boq_total":  173439399557.577,

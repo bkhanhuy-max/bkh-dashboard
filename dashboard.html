@@ -569,6 +569,20 @@
                     { "Name": "SAKI", "Value": 5254101052 },
                     { "Name": "QUANG PHÚC", "Value": 3831471000 }
                 ],
+                "top_remaining_materials": [
+                    { "Name": "Thép lưới hàn", "Calc": 229467.12, "Used": 165021.58, "Remaining": 64445.54, "Unit": "kg" },
+                    { "Name": "Bulong Liên Kết", "Calc": 65234.16, "Used": 5988.0, "Remaining": 59246.16, "Unit": "bộ" },
+                    { "Name": "Tole Mái", "Calc": 40861.67, "Used": 21457.99, "Remaining": 19403.68, "Unit": "m²" },
+                    { "Name": "Xi Măng", "Calc": 13168.05, "Used": 4240.0, "Remaining": 8928.05, "Unit": "kg" },
+                    { "Name": "Bê Tông", "Calc": 20256.18, "Used": 12449.0, "Remaining": 7807.18, "Unit": "m³" }
+                ],
+                "top_remaining_categories": [
+                    { "Name": "Công tác PCCC dự án", "Value": 17732021804 },
+                    { "Name": "Nhà máy HPS sản xuất", "Value": 9712988790 },
+                    { "Name": "Hệ thống Mep toàn ctrinh", "Value": 9702891860 },
+                    { "Name": "Công tác lắp dựng KCT", "Value": 8761126756 },
+                    { "Name": "Công tác bê tông", "Value": 7856092633 }
+                ],
                 "top_concrete_events": [
                     { "Date": "09/05/2026", "Component": "Dầm sàn T2 X2", "Volume": 428.5, "Mac": " M300 " },
                     { "Date": "12/05/2026", "Component": "Nền X3", "Volume": 379, "Mac": " M300 " },
@@ -772,22 +786,28 @@
                     </div>
                 `;
 
-                let suppliersHtml = '';
-                if (dashboardData.unice.top_suppliers && dashboardData.unice.top_suppliers.length > 0) {
-                    suppliersHtml = `
-                        <div class="section-header">Top 5 Nhà cung cấp theo Chi phí</div>
+                let remainingMaterialsHtml = '';
+                if (dashboardData.unice.top_remaining_materials && dashboardData.unice.top_remaining_materials.length > 0) {
+                    remainingMaterialsHtml = `
+                        <div class="section-header">Top Khối lượng Vật tư còn lại</div>
                         <table class="details-table">
                             <thead>
                                 <tr>
-                                    <th>Nhà cung cấp</th>
-                                    <th style="text-align: right;">Giá trị hợp đồng</th>
+                                    <th>Tên vật tư</th>
+                                    <th style="text-align: center;">Đơn vị</th>
+                                    <th style="text-align: right;">KL Tính toán</th>
+                                    <th style="text-align: right;">KL Sử dụng</th>
+                                    <th style="text-align: right;">KL Còn lại</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${dashboardData.unice.top_suppliers.map(s => `
+                                ${dashboardData.unice.top_remaining_materials.map(m => `
                                     <tr>
-                                        <td><strong>${s.Name}</strong></td>
-                                        <td style="text-align: right; font-weight: 500;">${formatVND(s.Value)}</td>
+                                        <td><strong>${m.Name}</strong></td>
+                                        <td style="text-align: center; color: var(--text-secondary);">${m.Unit}</td>
+                                        <td style="text-align: right; font-weight: 500;">${m.Calc.toLocaleString('vi-VN')}</td>
+                                        <td style="text-align: right; font-weight: 500; color: var(--color-success);">${m.Used.toLocaleString('vi-VN')}</td>
+                                        <td style="text-align: right; font-weight: 600; color: var(--color-warning);">${m.Remaining.toLocaleString('vi-VN')}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -795,26 +815,22 @@
                     `;
                 }
 
-                let concreteHtml = '';
-                if (dashboardData.unice.top_concrete_events && dashboardData.unice.top_concrete_events.length > 0) {
-                    concreteHtml = `
-                        <div class="section-header">Top 5 Sự kiện đổ Bê tông lớn nhất</div>
+                let remainingCategoriesHtml = '';
+                if (dashboardData.unice.top_remaining_categories && dashboardData.unice.top_remaining_categories.length > 0) {
+                    remainingCategoriesHtml = `
+                        <div class="section-header">Top Hạng mục có Giá trị lớn còn lại</div>
                         <table class="details-table">
                             <thead>
                                 <tr>
-                                    <th>Ngày</th>
-                                    <th>Hạng mục công trình</th>
-                                    <th style="text-align: right;">Khối lượng</th>
-                                    <th style="text-align: center;">Mác</th>
+                                    <th>Hạng mục thi công</th>
+                                    <th style="text-align: right;">Ngân sách còn lại</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${dashboardData.unice.top_concrete_events.map(e => `
+                                ${dashboardData.unice.top_remaining_categories.map(c => `
                                     <tr>
-                                        <td>${e.Date}</td>
-                                        <td><strong>${e.Component}</strong></td>
-                                        <td style="text-align: right; font-weight: 500;">${e.Volume.toLocaleString('vi-VN')} m³</td>
-                                        <td style="text-align: center;"><span style="background: rgba(255,255,255,0.05); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">${e.Mac.trim()}</span></td>
+                                        <td><strong>${c.Name}</strong></td>
+                                        <td style="text-align: right; font-weight: 600; color: var(--color-warning);">${formatVND(c.Value)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -850,8 +866,8 @@
                             <div class="progress-bar" style="width: 100%;"></div>
                         </div>
                     </div>
-                    ${suppliersHtml}
-                    ${concreteHtml}
+                    ${remainingMaterialsHtml}
+                    ${remainingCategoriesHtml}
                 `;
 
                 actions = [
