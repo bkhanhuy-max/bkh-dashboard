@@ -57,22 +57,21 @@ while ($true) {
                 } elseif ($path -eq "/api/update") {
                     WriteLog "▶ Bat dau cap nhat..."
                     $start = Get-Date
-                    $out1 = ""; $out2 = ""; $err = ""
+                    $out = ""
+                    $err = ""
                     try {
-                        $out1 = (& powershell -ExecutionPolicy Bypass -NonInteractive -File "$ProjectDir\update_dashboard.ps1" 2>&1) -join "`n"
-                        WriteLog "✅ update_dashboard.ps1 xong"
-                    } catch { $err += "dashboard: $_" }
-                    try {
-                        $out2 = (& powershell -ExecutionPolicy Bypass -NonInteractive -File "$ProjectDir\extract_ai_data.ps1" 2>&1) -join "`n"
-                        WriteLog "✅ extract_ai_data.ps1 xong"
-                    } catch { $err += " ai_data: $_" }
+                        $out = (& powershell -ExecutionPolicy Bypass -NonInteractive -File "$ProjectDir\deploy.ps1" 2>&1) -join "`n"
+                        WriteLog "✅ deploy.ps1 xong"
+                    } catch {
+                        $err = $_.ToString()
+                    }
 
                     $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
-                    $success = ($err -eq "")
+                    $success = ($err -eq "" -and $out -notmatch "❌")
                     $responseObj = [Ordered]@{
                         success = $success
                         elapsed = $elapsed
-                        output  = ($out1 + "`n" + $out2).Trim()
+                        output  = $out.Trim()
                         error   = $err.Trim()
                     }
                     $json = ConvertTo-Json $responseObj -Compress
