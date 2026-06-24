@@ -1552,6 +1552,26 @@
                 return `Dự án **HOWELL Technology** hiện trạng:\n- Doanh thu BOQ: ${formatBill(howell.boq_total)}\n- Ngân sách phê duyệt: ${formatBill(howell.budget_approved)}\n- Chi phí thực tế: Đang cập nhật (Chưa phát sinh chi phí).`;
             }
             
+            // Fallback general keyword matches (defaults to UNICE or general info if project is not specified)
+            if (q.includes('hợp đồng') || q.includes('nhà thầu') || q.includes('thầu phụ') || q.includes('subcontractor')) {
+                return `Tình hình hợp đồng thầu phụ/tổ đội (UNICE):\n- Đã ký kết: **${unice.contracts_signed}/${unice.contracts_total} gói**.\n- Hiện đạt tỷ lệ: ${(unice.contracts_signed / unice.contracts_total * 100).toFixed(1)}% kế hoạch ký kết.`;
+            }
+            if (q.includes('bê tông') || q.includes('concrete')) {
+                return `Tiến độ bê tông dự án **UNICE**:\n- Thiết kế: ${unice.concrete_design.toLocaleString()} m³\n- Thực tế cấp: ${unice.concrete_actual.toLocaleString()} m³\n- Chênh lệch: ${unice.concrete_diff.toLocaleString()} m³ (${unice.concrete_pct}).`;
+            }
+            if (q.includes('vật tư') || q.includes('trình mẫu') || q.includes('submittal')) {
+                return `Báo cáo vật tư trình mẫu (UNICE):\n- Tổng hồ sơ: ${unice.submittal_total} mẫu\n- Đã duyệt: ${unice.submittal_approved} mẫu\n- Đang trình: ${unice.submittal_submitted} mẫu (tỷ lệ trình đạt ${(unice.submittal_submitted / unice.submittal_total * 100).toFixed(1)}%).`;
+            }
+            if (q.includes('phát sinh') || q.includes('vo')) {
+                return `Dự án **UNICE Quảng Ngãi** đang theo dõi **${unice.vo_count}** hạng mục phát sinh (VO) cần trình duyệt giá với Chủ đầu tư.`;
+            }
+            if (q.includes('ngân sách') || q.includes('phê duyệt') || q.includes('boq')) {
+                return `Tổng ngân sách được duyệt của Hưng Phước:\n- UNICE Quảng Ngãi: ${formatBill(unice.budget_updated)} (Ngân sách cập nhật)\n- HOWELL Technology: ${formatBill(howell.budget_approved)} (Ngân sách phê duyệt)`;
+            }
+            if (q.includes('thực chi') || q.includes('chi phí') || q.includes('spent') || q.includes('giải ngân')) {
+                return `Chi phí thực tế lũy kế của các dự án:\n- UNICE Quảng Ngãi: ${formatBill(unice.spent_total)}\n- HOWELL Technology: Đang cập nhật (Chưa phát sinh chi phí).`;
+            }
+
             if (q.includes('tổng quan') || q.includes('hệ thống') || q.includes('tất cả')) {
                 const totalBoq = formatBill(unice.boq_total + howell.boq_total);
                 const totalApproved = formatBill(unice.budget_approved + howell.budget_approved);
