@@ -7,11 +7,25 @@ $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
 $excel.DisplayAlerts = $false
 
-$uniceBudgetFile = "d:\BKH-AI\01. DU AN 2026\01. UNICE\01. REPORT\1. UNICE - NGAN SACH - UP 15.06.2026.xlsx"
-$uniceMaterialFile = "d:\BKH-AI\01. DU AN 2026\01. UNICE\01. REPORT\2. UNICE - THEO DOI VAT TU - UP 15.06.2026.xlsx"
-$unicePlanFile = "d:\BKH-AI\01. DU AN 2026\01. UNICE\01. REPORT\3. UNICE - KE HOACH VT.NTP.xlsx"
-$uniceVoFile = "d:\BKH-AI\01. DU AN 2026\01. UNICE\01. REPORT\4. UNICE - THEO DOI PHAT SINH TDTK.xlsx"
-$howellBudgetFile = "d:\BKH-AI\01. DU AN 2026\02. HOWELL\01. REPORT\1. HOWELL - NGAN SACH - UP 15.06.2026.xlsx"
+function Resolve-NewestFile($dir, $pattern, $fallback) {
+    if (Test-Path $dir) {
+        $files = Get-ChildItem -Path $dir -Filter $pattern | Sort-Object LastWriteTime -Descending
+        if ($files.Count -gt 0) {
+            return $files[0].FullName
+        }
+    }
+    return $fallback
+}
+
+$uniceDir = "d:\BKH-AI\01. DU AN 2026\01. UNICE\01. REPORT"
+$howellDir = "d:\BKH-AI\01. DU AN 2026\02. HOWELL\01. REPORT"
+
+$uniceBudgetFile   = Resolve-NewestFile $uniceDir "*NGAN SACH*.xlsx" "$uniceDir\1. UNICE - NGAN SACH - UP 15.06.2026.xlsx"
+$uniceMaterialFile = Resolve-NewestFile $uniceDir "*THEO DOI VAT TU*.xlsx" "$uniceDir\2. UNICE - THEO DOI VAT TU - UP 15.06.2026.xlsx"
+$unicePlanFile     = Resolve-NewestFile $uniceDir "*KE HOACH*.xlsx" "$uniceDir\3. UNICE - KE HOACH VT.NTP.xlsx"
+$uniceVoFile       = Resolve-NewestFile $uniceDir "*PHAT SINH*.xlsx" "$uniceDir\4. UNICE - THEO DOI PHAT SINH TDTK.xlsx"
+$howellBudgetFile  = Resolve-NewestFile $howellDir "*NGAN SACH*.xlsx" "$howellDir\1. HOWELL - NGAN SACH - UP 15.06.2026.xlsx"
+$howellPlanFile    = Resolve-NewestFile $howellDir "*KE HOACH*.xlsx" "$howellDir\3. HOWELL - KE HOACH VT.NTP.xlsx"
 
 # Initialize with verified fallback values in case files are locked or unreadable
 $data = [PSCustomObject]@{
@@ -41,6 +55,11 @@ $data = [PSCustomObject]@{
         budget_approved = 186822505483.0
         budget_updated = 1755591992.0
         spent_total = 0.0
+        contracts_signed = 0
+        contracts_total = 0
+        submittal_approved = 0
+        submittal_submitted = 0
+        submittal_total = 0
         disciplines = @(
             [PSCustomObject]@{ Name = "Kết cấu thép"; Value = 35466546654.0 },
             [PSCustomObject]@{ Name = "Cơ điện (MEP)"; Value = 12058958958.0 },
@@ -406,6 +425,69 @@ if (Test-Path $howellBudgetFile) {
         Write-Output "  HOWELL Budget details read successfully: BOQ=$($data.howell.boq_total), Approved=$($data.howell.budget_approved), Updated=$($data.howell.budget_updated), Spent=$($data.howell.spent_total)"
     } catch {
         Write-Warning "Error reading HOWELL Budget: $_"
+    }
+}
+
+# --- EXTRACT HOWELL PLAN DATA ---
+if (Test-Path $howellPlanFile) {
+    try {
+        $wb = $excel.Workbooks.Open($howellPlanFile, [System.Type]::Missing, $true)
+        
+        # 1. Đọc sheet index 1: KH TDVT (Kế hoạch vật tư trình mẫu)
+        $sh1 = $wb.Sheets.Item(1)
+        $vals1 = $sh1.UsedRange.Value2
+        $rows1 = $vals1.GetLength(0)
+        
+        $subTotal = 0
+        $subApproved = 0
+        $subSubmitted = 0
+        for ($r = 12; $r -le $rows1; $r++) {
+            $stt = $vals1[$r, 1]
+            $name = $vals1[$r, 3]
+            if ($name -eq "" -or $name -eq $null) { continue }
+            $status = $vals1[$r, 10]
+            if ($status -eq $null) { $status = "" }
+            
+            $subTotal++
+            if ($status.ToString().Trim() -match "Đã phê duyệt|Đã duyệt|Duyệt") {
+                $subApproved++
+            } elseif ($status.ToString().Trim() -match "Đang trình|Đã trình|Chờ duyệt") {
+                $subSubmitted++
+            }
+        }
+        $data.howell.submittal_total = $subTotal
+        $data.howell.submittal_approved = $subApproved
+        $data.howell.submittal_submitted = $subSubmitted
+        
+        # 2. Đọc sheet index 2: KH KKHĐ (Hợp đồng thầu phụ & tổ đội)
+        $sh2 = $wb.Sheets.Item(2)
+        $vals2 = $sh2.UsedRange.Value2
+        $rows2 = $vals2.GetLength(0)
+        
+        $contractsTotal = 0
+        $contractsSigned = 0
+        for ($r = 12; $r -le $rows2; $r++) {
+            $stt = $vals2[$r, 1]
+            $name = $vals2[$r, 2]
+            if ($name -eq "" -or $name -eq $null) { continue }
+            # Bỏ qua dòng tiêu đề La Mã
+            if ($stt.ToString().Trim() -match "^[IVXLC]+$") { continue }
+            
+            $status = $vals2[$r, 15]
+            if ($status -eq $null) { $status = "" }
+            
+            $contractsTotal++
+            if ($status.ToString().Trim() -match "Hoàn thành|Đã ký|Đã ký HĐ|Ký HĐ") {
+                $contractsSigned++
+            }
+        }
+        $data.howell.contracts_total = $contractsTotal
+        $data.howell.contracts_signed = $contractsSigned
+        
+        $wb.Close($false)
+        Write-Output "  HOWELL Plan details read successfully: Signed=$contractsSigned, Total=$contractsTotal, SubTotal=$subTotal, Approved=$subApproved, Submitted=$subSubmitted"
+    } catch {
+        Write-Warning "Error reading HOWELL Plan: $_"
     }
 }
 

@@ -978,7 +978,7 @@
                         <option value="unice">Dự án UNICE Quảng Ngãi</option>
                         <option value="howell">Dự án HOWELL Technology</option>
                     </select>
-                    <button class="btn-refresh" onclick="showRefreshInstruction()">
+                    <button class="btn-refresh" onclick="runUpdateData()" title="Cập nhật dữ liệu từ Excel">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 1 1 21.306 7H18M4 9h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <span>Cập nhật số liệu</span>
                     </button>
@@ -1023,14 +1023,15 @@
         </main>
     </div>
 
-    <!-- Instruction Modal -->
-    <div class="modal" id="modal-instruction" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-title">Cập nhật số liệu Excel</div>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Để quét dữ liệu mới nhất từ các file Excel gốc, bạn hãy chạy lệnh sau trong cửa sổ PowerShell tại thư mục dự án:</p>
-            <div class="modal-body">powershell -ExecutionPolicy Bypass -File .\update_dashboard.ps1</div>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Sau khi lệnh chạy xong, bạn chỉ cần tải lại (F5) trang web này.</p>
-            <button class="btn-modal-close" onclick="document.getElementById('modal-instruction').style.display = 'none'">Đóng</button>
+    <!-- Update Modal -->
+    <div class="modal" id="modal-update" onclick="closeUpdateModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 480px;">
+            <div class="modal-title" id="modal-update-title">🔄 Đang cập nhật dữ liệu...</div>
+            <div id="modal-update-body" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; margin: 1rem 0; max-height: 220px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; font-family: monospace; white-space: pre-wrap;">Khởi động...</div>
+            <div id="modal-update-footer" style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+                <button class="btn-modal-close" id="btn-update-close" onclick="closeUpdateModal()" style="display:none;">Xong</button>
+                <button class="btn-modal-close" id="btn-update-reload" onclick="location.reload()" style="display:none; background: var(--color-primary);">F5 Tải lại trang</button>
+            </div>
         </div>
     </div>
 
@@ -1097,7 +1098,9 @@
             }
         };
 
-        // Attempt to fetch fresh data from dashboard_data.json
+        // Load cả dashboard_data.json và ai_data.json
+        let aiData = null; // Dữ liệu chi tiết cho Trợ lý ảo
+
         fetch('dashboard_data.json')
             .then(response => response.json())
             .then(data => {
@@ -1106,9 +1109,20 @@
                 renderDashboard();
             })
             .catch(error => {
-                console.warn("Could not fetch dashboard_data.json (expected in local file opening due to browser CORS rules). Using embedded fallback data.");
+                console.warn("Could not fetch dashboard_data.json. Using embedded fallback data.");
                 document.getElementById('lbl-last-updated').innerText = dashboardData.last_updated;
                 renderDashboard();
+            });
+
+        // Load dữ liệu chi tiết cho chatbot AI (không bắt buộc)
+        fetch('ai_data.json')
+            .then(response => response.json())
+            .then(data => {
+                aiData = data;
+                console.log("✅ ai_data.json loaded - chatbot has full detail data");
+            })
+            .catch(() => {
+                console.warn("ai_data.json chưa có. Chatbot sẽ dùng dashboard_data.json làm dự phòng.");
             });
 
         function formatVND(value) {
@@ -1121,13 +1135,91 @@
             return value.toLocaleString('vi-VN') + " VND";
         }
 
-        function showRefreshInstruction() {
-            document.getElementById('modal-instruction').style.display = 'flex';
+        async function runUpdateData() {
+            const modal = document.getElementById('modal-update');
+            const title = document.getElementById('modal-update-title');
+            const body  = document.getElementById('modal-update-body');
+            const btnClose  = document.getElementById('btn-update-close');
+            const btnReload = document.getElementById('btn-update-reload');
+
+            // Check if page is accessed locally (localhost, 127.0.0.1, or local file)
+            const isLocal = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' || 
+                            window.location.hostname === '';
+            
+            if (!isLocal) {
+                title.textContent = '🔒 Tính năng dành riêng cho Admin';
+                body.innerHTML = `<div style="font-family: inherit; white-space: normal; color: var(--text-primary); font-size: 0.9rem;">` +
+                                 `<strong>Tính năng cập nhật dữ liệu trực tiếp không thể thực hiện trực tuyến.</strong><br><br>` +
+                                 `Thao tác này chỉ chạy được trên máy tính của Người quản lý dự án (nơi lưu trữ các file Excel gốc và chạy API Server nội bộ).<br><br>` +
+                                 `Quý khách đang xem bản thuyết trình trực tuyến, số liệu tại đây sẽ tự động hiển thị bản cập nhật mới nhất từ người quản lý.` +
+                                 `</div>`;
+                btnClose.style.display  = 'inline-block';
+                btnReload.style.display = 'none';
+                modal.style.display = 'flex';
+                return;
+            }
+
+            title.textContent = '🔄 Đang cập nhật dữ liệu từ Excel...';
+            body.textContent  = '⏳ Đang kết nối với API server...\n';
+            btnClose.style.display  = 'none';
+            btnReload.style.display = 'none';
+            modal.style.display = 'flex';
+
+            try {
+                // Kiểm tra server với timeout 4 giây
+                const ctrl1 = new AbortController();
+                const t1 = setTimeout(() => ctrl1.abort(), 4000);
+                let statusOk = false;
+                try {
+                    const statusRes = await fetch('http://localhost:8001/api/status', { signal: ctrl1.signal });
+                    clearTimeout(t1);
+                    statusOk = statusRes.ok;
+                } catch(e) {
+                    clearTimeout(t1);
+                }
+
+                if (!statusOk) {
+                    throw new Error('API Server chưa chạy. Hãy chạy file start_api_server.bat trước.');
+                }
+
+                body.textContent += '✅ Kết nối thành công\n⏳ Đang đọc dữ liệu Excel (khoảng 1-3 phút)...\n';
+
+                // Gọi lệnh update với timeout 5 phút
+                const ctrl2 = new AbortController();
+                const t2 = setTimeout(() => ctrl2.abort(), 300000);
+                const res = await fetch('http://localhost:8001/api/update', {
+                    method: 'POST',
+                    signal: ctrl2.signal
+                });
+                clearTimeout(t2);
+                const data = await res.json();
+
+                if (data.success) {
+                    title.textContent = '✅ Cập nhật thành công!';
+                    body.textContent += '\n' + data.output.replace(/\\n/g,'\n') + '\n\n⏱️ Hoàn tất sau ' + data.elapsed + 's';
+                    btnReload.style.display = 'inline-block';
+                } else {
+                    title.textContent = '⚠️ Có lỗi khi cập nhật';
+                    body.textContent += '\n' + data.output.replace(/\\n/g,'\n') + '\nLỗi: ' + data.error;
+                    btnClose.style.display = 'inline-block';
+                    btnReload.style.display = 'inline-block';
+                }
+            } catch (err) {
+                title.textContent = '❌ Không thể kết nối API Server';
+                body.textContent = 'Lỗi: ' + err.message + '\n\nCách khắc phục:\n1. Vào thư mục D:\\BKH-AI\\\n2. Chạy file start_api_server.bat\n3. Chờ vài giây rồi nhấn Cập nhật lại';
+                btnClose.style.display = 'inline-block';
+            }
         }
 
-        function closeModal(event) {
-            document.getElementById('modal-instruction').style.display = 'none';
+        function closeUpdateModal(event) {
+            if (!event || event.target === document.getElementById('modal-update')) {
+                document.getElementById('modal-update').style.display = 'none';
+            }
         }
+
+        function showRefreshInstruction() { runUpdateData(); }
+        function closeModal(event) { closeUpdateModal(event); }
 
         function renderDashboard() {
             const project = document.getElementById('sel-project').value;
@@ -1417,6 +1509,38 @@
                     `;
                 }
 
+                let howellSubmittalHtml = '';
+                if (dashboardData.howell.submittal_total > 0) {
+                    const subPct = (((dashboardData.howell.submittal_approved + dashboardData.howell.submittal_submitted) / dashboardData.howell.submittal_total) * 100).toFixed(1);
+                    howellSubmittalHtml = `
+                        <div class="metric-row">
+                            <div class="metric-header">
+                                <span class="metric-name">Báo cáo vật tư trình mẫu (HOWELL)</span>
+                                <span class="metric-values">Đã duyệt ${dashboardData.howell.submittal_approved} | Đang trình ${dashboardData.howell.submittal_submitted} / ${dashboardData.howell.submittal_total} mẫu (${subPct}% đã trình)</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar warning" style="width: ${subPct}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                let howellContractsHtml = '';
+                if (dashboardData.howell.contracts_total > 0) {
+                    const cntPct = ((dashboardData.howell.contracts_signed / dashboardData.howell.contracts_total) * 100).toFixed(1);
+                    howellContractsHtml = `
+                        <div class="metric-row">
+                            <div class="metric-header">
+                                <span class="metric-name">Hợp đồng thầu phụ & Tổ đội (HOWELL)</span>
+                                <span class="metric-values">Đã ký ${dashboardData.howell.contracts_signed} / ${dashboardData.howell.contracts_total} gói (${cntPct}%)</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar success" style="width: ${cntPct}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 metricsContainer.innerHTML = `
                     <div class="metric-row">
                         <div class="metric-header">
@@ -1427,6 +1551,8 @@
                             <div class="progress-bar success" style="width: ${dashboardData.howell.spent_total > 0 ? howellPct : 0}%;"></div>
                         </div>
                     </div>
+                    ${howellSubmittalHtml}
+                    ${howellContractsHtml}
                     ${disciplinesHtml}
                 `;
 
@@ -1495,15 +1621,15 @@
         
         <!-- Settings Overlay -->
         <div class="chat-settings-overlay" id="chat-settings-overlay">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; color: white;">Cấu hình Gemini API</h3>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Vui lòng nhập API Key của Google Gemini để trợ lý có thể đọc dữ liệu và trả lời mọi câu hỏi của bạn. API Key được lưu bảo mật ở trình duyệt của bạn (localStorage).</p>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; color: white;">⚙️ Cấu hình Trợ lý ảo</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Nhập API Key của Google Gemini để trợ lý có thể trả lời mọi câu hỏi về dự án. Key được lưu trên trình duyệt của bạn, không gửi đi đâu khác.</p>
             <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                 <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">GEMINI API KEY</label>
-                <input type="password" id="gemini-api-key-input" placeholder="Nhập API Key ở đây..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.8rem; color: white; font-size: 0.85rem; outline: none;">
+                <input type="password" id="gemini-api-key-input" placeholder="AIza..." style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.8rem; color: white; font-size: 0.85rem; outline: none; width: 100%; box-sizing: border-box;">
             </div>
-            <p style="font-size: 0.75rem; color: var(--color-primary);"><a href="https://aistudio.google.com/" target="_blank" style="color: var(--color-primary); text-decoration: underline;">Lấy Gemini API Key miễn phí tại đây</a></p>
+            <p style="font-size: 0.75rem; color: var(--color-primary); margin: 0;"><a href="https://aistudio.google.com/" target="_blank" style="color: var(--color-primary); text-decoration: underline;">🔑 Lấy API Key miễn phí tại Google AI Studio</a></p>
             <div style="display: flex; gap: 0.5rem; margin-top: auto;">
-                <button onclick="saveChatSettings()" style="flex: 1; background: var(--color-primary); border: none; color: white; padding: 0.6rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Lưu cấu hình</button>
+                <button onclick="saveChatSettings()" style="flex: 1; background: var(--color-primary); border: none; color: white; padding: 0.6rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">💾 Lưu và bắt đầu chat</button>
                 <button onclick="toggleChatSettings(false)" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Đóng</button>
             </div>
         </div>
@@ -1529,6 +1655,9 @@
     <script>
         // Global chat UI handlers
         let chatHistory = [];
+        // API Key được cấu hình sẵn (để trống để bảo mật, người dùng tự cấu hình qua UI)
+        const GEMINI_API_KEY = '';
+        const GEMINI_MODEL = 'gemini-2.5-flash';
 
         function toggleChatbot(show) {
             const chatWindow = document.getElementById('chat-window');
@@ -1567,7 +1696,7 @@
             }
             localStorage.setItem('hp_cons_gemini_api_key', key);
             toggleChatSettings(false);
-            addChatMessage("✅ Cấu hình API Key thành công! Tôi đã sẵn sàng trả lời các câu hỏi của bạn.", 'bot');
+            addChatMessage('✅ Cấu hình thành công! Tôi đã sẵn sàng. Hãy hỏi tôi bất kỳ điều gì về dự án 😊', 'bot');
         }
 
         function sendSuggestion(text) {
@@ -1598,16 +1727,7 @@
             const text = input.value.trim();
             if (!text) return;
             
-            const apiKey = localStorage.getItem('hp_cons_gemini_api_key');
-            if (!apiKey) {
-                addChatMessage(text, 'user');
-                input.value = '';
-                setTimeout(() => {
-                    addChatMessage("⚠️ Bạn chưa cấu hình API Key. Đang mở cài đặt...", "bot");
-                    toggleChatSettings(true);
-                }, 400);
-                return;
-            }
+            const apiKey = localStorage.getItem('hp_cons_gemini_api_key') || GEMINI_API_KEY;
             
             // Show user message
             addChatMessage(text, 'user');
@@ -1629,17 +1749,23 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             try {
+                // Dùng dữ liệu chi tiết nếu có, ngược lại dùng tóm tắt
+                const contextData = aiData
+                    ? { summary: dashboardData, detail: aiData }
+                    : dashboardData;
+
                 const systemPrompt = `Bạn là Trợ lý ảo HP Cons, hỗ trợ ban quản lý dự án Hưng Phước Construction.
-Dưới đây là cơ sở dữ liệu các dự án đang thi công của Hưng Phước Construction (dưới dạng JSON):
-${JSON.stringify(dashboardData, null, 2)}
+Dưới đây là toàn bộ cơ sở dữ liệu dự án (dạng JSON):
+${JSON.stringify(contextData, null, 2)}
 
 Hãy trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn, súc tích bằng tiếng Việt dựa hoàn toàn trên dữ liệu trên.
 Quy tắc:
-1. Khi nhắc đến số tiền lớn, hãy định dạng thành tỷ VND (ví dụ: 17.73 tỷ VND thay vì 17732021804 VND) hoặc triệu VND để dễ đọc.
+1. Khi nhắc đến số tiền lớn, hãy định dạng thành tỷ VND (ví dụ: 17.73 tỷ VND) hoặc triệu VND.
 2. Nếu thông tin không có trong dữ liệu, hãy trả lời lịch sự rằng dữ liệu hiện tại không đề cập đến điều này.
-3. Trình bày đẹp mắt bằng Markdown.`;
+3. Trình bày đẹp mắt bằng Markdown.
+4. Dữ liệu trong mục "detail" là dữ liệu chi tiết đầy đủ (danh sách hợp đồng, VO, vật tư...). Ưu tiên dùng dữ liệu này khi trả lời câu hỏi chi tiết.`;
 
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1653,14 +1779,31 @@ Quy tắc:
                 });
                 
                 if (!response.ok) {
-                    throw new Error("Lỗi kết nối API: " + response.status);
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData?.error?.message || `HTTP ${response.status}`;
+                    typingEl.remove();
+                    if (response.status === 400 && errMsg.includes('API key')) {
+                        addChatMessage(`❌ **API Key không hợp lệ!** Vui lòng kiểm tra lại.\n\n_Lỗi: ${errMsg}_`, 'bot');
+                        setTimeout(() => toggleChatSettings(true), 600);
+                    } else if (response.status === 403 || response.status === 401) {
+                        addChatMessage(`❌ **API Key bị từ chối (lỗi ${response.status}).** Vui lòng kiểm tra lại API Key.\n\n_Lỗi: ${errMsg}_`, 'bot');
+                        setTimeout(() => toggleChatSettings(true), 600);
+                    } else {
+                        addChatMessage(`❌ Lỗi từ API Gemini: **${errMsg}**`, 'bot');
+                    }
+                    return;
                 }
                 
                 const data = await response.json();
-                const replyText = data.candidates[0].content.parts[0].text;
+                const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 // Remove typing indicator
                 typingEl.remove();
+                
+                if (!replyText) {
+                    addChatMessage('⚠️ Trợ lý không trả về nội dung. Vui lòng thử lại.', 'bot');
+                    return;
+                }
                 
                 // Display reply
                 addChatMessage(replyText, 'bot');
@@ -1670,7 +1813,7 @@ Quy tắc:
             } catch (err) {
                 console.error(err);
                 typingEl.remove();
-                addChatMessage("❌ Có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra lại API Key hoặc kết nối mạng.", 'bot');
+                addChatMessage(`❌ Lỗi kết nối: **${err.message}**\n\nVui lòng kiểm tra kết nối mạng và API Key.`, 'bot');
             }
         }
 
