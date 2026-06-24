@@ -548,8 +548,10 @@
         let dashboardData = {
             "last_updated": "2026-06-20 15:59:51",
             "unice": {
-                "boq_total": 229359753215,
-                "spent_total": 51917217437.7569,
+                "boq_total": 309999768358.333,
+                "spent_total": 149596114996.139,
+                "budget_approved": 269303894213.484,
+                "budget_updated": 272085619555.268,
                 "concrete_design": 13287.6600171475,
                 "concrete_actual": 12449,
                 "concrete_diff": -838.660017147535,
@@ -557,6 +559,9 @@
                 "contracts_signed": 42,
                 "contracts_total": 59,
                 "vo_count": 33,
+                "submittal_total": 53,
+                "submittal_approved": 1,
+                "submittal_submitted": 11,
                 "top_suppliers": [
                     { "Name": "HƯNG THỊNH", "Value": 16647183962.808 },
                     { "Name": "VIỆT MINH THỊNH", "Value": 7860696680 },
@@ -691,11 +696,11 @@
                     </div>
                     <div class="metric-row">
                         <div class="metric-header">
-                            <span class="metric-name">Sản lượng bê tông (UNICE)</span>
-                            <span class="metric-values">${dashboardData.unice.concrete_actual.toLocaleString()} m³ / ${dashboardData.unice.concrete_design.toLocaleString()} m³ (${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100).toFixed(1)}%)</span>
+                            <span class="metric-name">Báo cáo vật tư trình mẫu (UNICE)</span>
+                            <span class="metric-values">Đã duyệt ${dashboardData.unice.submittal_approved} | Đang trình ${dashboardData.unice.submittal_submitted} / ${dashboardData.unice.submittal_total} mẫu (${(((dashboardData.unice.submittal_approved + dashboardData.unice.submittal_submitted) / dashboardData.unice.submittal_total) * 100).toFixed(1)}% đã trình)</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar warning" style="width: ${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100)}%;"></div>
+                            <div class="progress-bar warning" style="width: ${(((dashboardData.unice.submittal_approved + dashboardData.unice.submittal_submitted) / dashboardData.unice.submittal_total) * 100)}%;"></div>
                         </div>
                     </div>
 
@@ -820,11 +825,11 @@
                 metricsContainer.innerHTML = `
                     <div class="metric-row">
                         <div class="metric-header">
-                            <span class="metric-name">Sản lượng bê tông (MLAND cung cấp)</span>
-                            <span class="metric-values">${dashboardData.unice.concrete_actual.toLocaleString()} m³ / ${dashboardData.unice.concrete_design.toLocaleString()} m³ (${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100).toFixed(1)}%)</span>
+                            <span class="metric-name">Báo cáo vật tư trình mẫu</span>
+                            <span class="metric-values">Đã duyệt ${dashboardData.unice.submittal_approved} | Đang trình ${dashboardData.unice.submittal_submitted} / ${dashboardData.unice.submittal_total} mẫu (${(((dashboardData.unice.submittal_approved + dashboardData.unice.submittal_submitted) / dashboardData.unice.submittal_total) * 100).toFixed(1)}% đã trình)</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar warning" style="width: ${((dashboardData.unice.concrete_actual / dashboardData.unice.concrete_design) * 100)}%;"></div>
+                            <div class="progress-bar warning" style="width: ${(((dashboardData.unice.submittal_approved + dashboardData.unice.submittal_submitted) / dashboardData.unice.submittal_total) * 100)}%;"></div>
                         </div>
                     </div>
                     <div class="metric-row">

@@ -28,6 +28,9 @@ $data = [PSCustomObject]@{
         contracts_signed = 42
         contracts_total = 59
         vo_count = 33
+        submittal_total = 53
+        submittal_approved = 1
+        submittal_submitted = 11
         top_suppliers = @()
         top_concrete_events = @()
     }
@@ -179,12 +182,13 @@ if ($data.unice.top_concrete_events.Count -eq 0) {
     )
 }
 
-# 3. Plan (Contracts)
+# 3. Plan (Contracts) & Material Submittals
 if (Test-Path $unicePlanFile) {
     try {
         $wb = $excel.Workbooks.Open($unicePlanFile, [System.Type]::Missing, $true)
-        $sheetKH = $wb.Sheets.Item("3, KH KHĐ")
         
+        # 3.1 Contracts
+        $sheetKH = $wb.Sheets.Item("3, KH KHĐ")
         $signedCount = 0
         $totalCount = 0
         
@@ -209,10 +213,45 @@ if (Test-Path $unicePlanFile) {
         if ($signedCount -gt 0) { $data.unice.contracts_signed = $signedCount }
         if ($totalCount -gt 0) { $data.unice.contracts_total = $totalCount }
         
+        # 3.2 Material Submittals (MAU TRINH CDT)
+        $sheetKHCDT = $wb.Sheets.Item("4, MAU TRINH CDT")
+        $rangeKHCDT = $sheetKHCDT.UsedRange
+        $valsKHCDT = $rangeKHCDT.Value2
+        $rowsKHCDT = $valsKHCDT.GetLength(0)
+        
+        $subTotal = 0
+        $subApproved = 0
+        $subSubmitted = 0
+        
+        for ($r = 12; $r -le $rowsKHCDT; $r++) {
+            $sttVal = $valsKHCDT[$r, 1]
+            $nameVal = $valsKHCDT[$r, 2]
+            $statusVal = $valsKHCDT[$r, 6]
+            
+            $stt = if ($sttVal -ne $null) { $sttVal.ToString().Trim() } else { "" }
+            $name = if ($nameVal -ne $null) { $nameVal.ToString().Trim() } else { "" }
+            $status = if ($statusVal -ne $null) { $statusVal.ToString().Trim() } else { "" }
+            
+            # Count actual material submittals
+            if ($name -ne "" -and $status -ne "" -and ($stt -match '^\d+$')) {
+                $subTotal++
+                if ($status -match "Đã duyệt" -or $status -match "Da duyet") {
+                    $subApproved++
+                } elseif ($status -match "Đã trình" -or $status -match "Da trinh") {
+                    $subSubmitted++
+                }
+            }
+        }
+        
+        # Write to $data
+        $data.unice.submittal_total = $subTotal
+        $data.unice.submittal_approved = $subApproved
+        $data.unice.submittal_submitted = $subSubmitted
+        
         $wb.Close($false)
-        Write-Output "  Contracts details read successfully: Signed=$($data.unice.contracts_signed), Total=$($data.unice.contracts_total)"
+        Write-Output "  Contracts & Submittals read successfully: Signed=$($data.unice.contracts_signed), Total=$($data.unice.contracts_total), SubTotal=$subTotal, Approved=$subApproved, Submitted=$subSubmitted"
     } catch {
-        Write-Warning "Error reading UNICE Contracts: $_"
+        Write-Warning "Error reading UNICE Contracts/Submittals: $_"
     }
 }
 
