@@ -1142,29 +1142,16 @@
             const btnClose  = document.getElementById('btn-update-close');
             const btnReload = document.getElementById('btn-update-reload');
 
-            // Check if page is accessed locally (localhost, 127.0.0.1, or local file)
-            const isLocal = window.location.hostname === 'localhost' || 
-                            window.location.hostname === '127.0.0.1' || 
-                            window.location.hostname === '';
-            
-            if (!isLocal) {
-                title.textContent = '🔒 Tính năng dành riêng cho Admin';
-                body.innerHTML = `<div style="font-family: inherit; white-space: normal; color: var(--text-primary); font-size: 0.9rem;">` +
-                                 `<strong>Tính năng cập nhật dữ liệu trực tiếp không thể thực hiện trực tuyến.</strong><br><br>` +
-                                 `Thao tác này chỉ chạy được trên máy tính của Người quản lý dự án (nơi lưu trữ các file Excel gốc và chạy API Server nội bộ).<br><br>` +
-                                 `Quý khách đang xem bản thuyết trình trực tuyến, số liệu tại đây sẽ tự động hiển thị bản cập nhật mới nhất từ người quản lý.` +
-                                 `</div>`;
-                btnClose.style.display  = 'inline-block';
-                btnReload.style.display = 'none';
-                modal.style.display = 'flex';
-                return;
-            }
-
             title.textContent = '🔄 Đang cập nhật dữ liệu từ Excel...';
             body.textContent  = '⏳ Đang kết nối với API server...\n';
             btnClose.style.display  = 'none';
             btnReload.style.display = 'none';
             modal.style.display = 'flex';
+
+            // Check if page is accessed locally (localhost, 127.0.0.1, or local file)
+            const isLocal = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' || 
+                            window.location.hostname === '';
 
             try {
                 // Kiểm tra server với timeout 4 giây
@@ -1180,7 +1167,19 @@
                 }
 
                 if (!statusOk) {
-                    throw new Error('API Server chưa chạy. Hãy chạy file start_api_server.bat trước.');
+                    if (!isLocal) {
+                        title.textContent = '🔒 Tính năng dành riêng cho Admin';
+                        body.innerHTML = `<div style="font-family: inherit; white-space: normal; color: var(--text-primary); font-size: 0.9rem;">` +
+                                         `<strong>Tính năng cập nhật dữ liệu trực tiếp không thể thực hiện trực tuyến.</strong><br><br>` +
+                                         `Thao tác này chỉ chạy được trên máy tính của Người quản lý dự án (nơi lưu trữ các file Excel gốc và chạy API Server nội bộ).<br><br>` +
+                                         `Quý khách đang xem bản thuyết trình trực tuyến, số liệu tại đây sẽ tự động hiển thị bản cập nhật mới nhất từ người quản lý.` +
+                                         `</div>`;
+                        btnClose.style.display  = 'inline-block';
+                        btnReload.style.display = 'none';
+                        return;
+                    } else {
+                        throw new Error('API Server chưa chạy. Hãy chạy file start_api_server.bat trước.');
+                    }
                 }
 
                 body.textContent += '✅ Kết nối thành công\n⏳ Đang đọc dữ liệu Excel (khoảng 1-3 phút)...\n';
