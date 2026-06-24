@@ -61,19 +61,64 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .header-title h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.25rem;
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
         }
 
-        .header-title p {
-            font-size: 0.9rem;
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1.5px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 0.6rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+        }
+
+        .header-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-brand {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.15rem;
+        }
+
+        .company-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            opacity: 0.95;
+            margin-bottom: 0.2rem;
+        }
+
+        .department-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--color-success);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .department-name span {
             color: var(--text-secondary);
+            text-transform: none;
+            letter-spacing: normal;
         }
 
         .header-controls {
@@ -479,9 +524,31 @@
     <div class="container">
         <!-- --- Header --- -->
         <header>
-            <div class="header-title">
-                <h1>BKH-AI Dashboard</h1>
-                <p>Quản trị đồng thời nhiều dự án xây dựng & thi công | Cập nhật lúc: <span id="lbl-last-updated">-</span></p>
+            <div class="header-logo-container">
+                <div class="header-logo">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 20V5C4 4.44772 4.44772 4 5 4H10C10.5523 4 11 4.44772 11 5V20" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M11 20V11C11 10.4477 11.4477 10 12 10H19C19.5523 10 20 10.4477 20 11V20" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M2 20H22" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 8H8" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 12H8" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 16H8" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M15 14H16" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M15 17H16" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="logo-grad" x1="2" y1="4" x2="22" y2="20" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#60a5fa"/>
+                                <stop offset="50%" stop-color="#3b82f6"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <div class="company-brand">HƯNG PHƯỚC CONSTRUCTION</div>
+                    <div class="company-name">CÔNG TY CỔ PHẦN XÂY DỰNG CÔNG NGHIỆP HƯNG PHƯỚC</div>
+                    <div class="department-name">PHÒNG QUẢN LÝ DỰ ÁN <span>| Cập nhật lúc: <span id="lbl-last-updated">-</span></span></div>
+                </div>
             </div>
             <div class="header-controls">
                 <select class="project-selector" id="sel-project" onchange="renderDashboard()">
