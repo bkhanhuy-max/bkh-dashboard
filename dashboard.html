@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -1510,12 +1510,12 @@
         function generateBotResponse(query) {
             const q = query.toLowerCase();
             
-            if (!window.dashboardData) {
+            if (!dashboardData) {
                 return "Hiện chưa tải được dữ liệu, vui lòng thử lại sau.";
             }
             
-            const unice = window.dashboardData.unice;
-            const howell = window.dashboardData.howell;
+            const unice = dashboardData.unice;
+            const howell = dashboardData.howell;
             
             function formatBill(val) {
                 return (val / 1e9).toFixed(2) + " tỷ VND";
