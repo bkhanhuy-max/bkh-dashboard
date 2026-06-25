@@ -28,10 +28,9 @@ if (Test-Path "$ProjectDir\start_api_server.vbs") {
     Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -NonInteractive -File `"$ProjectDir\api_server.ps1`"" -WindowStyle Hidden
 }
 
-# Bước 3: Khởi động SSH Tunnel chạy ngầm
+# Bước 3: Khởi động SSH Tunnel chạy ngầm (Sử dụng VBScript để đảm bảo chạy ngầm độc lập bền vững)
 Log "Khởi động SSH Tunnel (Pinggy)..."
-$sshCmd = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -p 443 -R 80:127.0.0.1:8001 -L 4300:127.0.0.1:4300 free@free.pinggy.io u:Host:localhost"
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$sshCmd`"" -WindowStyle Hidden
+wscript //nologo "$ProjectDir\start_ssh_tunnel.vbs"
 
 # Bước 4: Chờ kết nối và lấy URL công khai
 Log "Đang đợi lấy URL công khai..."
