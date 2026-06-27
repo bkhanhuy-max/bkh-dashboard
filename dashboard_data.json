@@ -1,6 +1,8 @@
 ﻿{
-    "last_updated":  "2026-06-26 09:00:02",
+    "last_updated":  "2026-06-27 09:00:02",
     "unice":  {
+                  "project_name":  "Dự án Nhà máy UNICE Quảng Ngãi",
+                  "project_code":  "UNICE",
                   "boq_total":  309999768358.333,
                   "budget_approved":  269303894213.484,
                   "budget_updated":  272085619555.268,
@@ -134,6 +136,8 @@
                                                ]
               },
     "howell":  {
+                   "project_name":  "Dự án HOWELL Technology",
+                   "project_code":  "HOWELL",
                    "boq_total":  173439399557.577,
                    "budget_approved":  186822505482.858,
                    "budget_updated":  1755591991.73832,
